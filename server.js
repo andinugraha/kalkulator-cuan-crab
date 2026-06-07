@@ -1,10 +1,14 @@
 import 'dotenv/config';
 import crypto from 'crypto';
 import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import midtransClient from 'midtrans-client';
 import { evaluateExpression } from './src/calculator.js';
 
 const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const port = Number(process.env.PORT || 3001);
 const isProduction = process.env.MIDTRANS_IS_PRODUCTION === 'true';
 const resultPrice = Number(process.env.RESULT_PRICE || 5000);
@@ -28,7 +32,11 @@ const coreApi = new midtransClient.CoreApi({
 const orders = new Map();
 
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 app.get('/config.js', (_req, res) => {
   res.type('application/javascript').send(`
