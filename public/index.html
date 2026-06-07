@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kalkulator Cuan Crab</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/config.js"></script>
+  </head>
+  <body>
+    <main class="shell" aria-label="Kalkulator">
+      <section class="calculator" aria-label="Kalkulator">
+        <div class="display" aria-live="polite">
+          <div id="expression" class="expression">0</div>
+          <div id="status" class="status"></div>
+        </div>
+
+        <div class="keys">
+          <button class="key utility" data-action="clear">C</button>
+          <button class="key utility" data-action="backspace">←</button>
+          <button class="key utility" data-value="(">(</button>
+          <button class="key utility" data-value=")">)</button>
+
+          <button class="key" data-value="7">7</button>
+          <button class="key" data-value="8">8</button>
+          <button class="key" data-value="9">9</button>
+          <button class="key operator" data-value="÷">÷</button>
+
+          <button class="key" data-value="4">4</button>
+          <button class="key" data-value="5">5</button>
+          <button class="key" data-value="6">6</button>
+          <button class="key operator" data-value="×">×</button>
+
+          <button class="key" data-value="1">1</button>
+          <button class="key" data-value="2">2</button>
+          <button class="key" data-value="3">3</button>
+          <button class="key operator" data-value="-">−</button>
+
+          <button class="key" data-value="0">0</button>
+          <button class="key" data-value=".">.</button>
+          <button class="key equals" data-action="pay">=</button>
+          <button class="key operator" data-value="+">+</button>
+        </div>
+      </section>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
