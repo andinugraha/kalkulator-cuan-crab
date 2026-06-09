@@ -140,6 +140,9 @@ async function payForResult() {
           setStatus('Pembayaran Sukses! Hasil muncul.', false);
           setBusy(false);
           
+          // Efek suara cash register Tuan Krab
+          playCashRegisterSound();
+          
           // Simpan ke riwayat perhitungan
           saveToHistory(oldExpression, localResult);
         } catch (err) {
@@ -179,6 +182,9 @@ async function revealResult(orderId, oldExpression) {
       setStatus('Pembayaran Sukses! Hasil muncul.', false);
       setBusy(false);
       
+      // Efek suara cash register Tuan Krab
+      playCashRegisterSound();
+      
       // Simpan ke riwayat perhitungan
       saveToHistory(oldExpression, payload.result);
       return;
@@ -195,6 +201,12 @@ async function revealResult(orderId, oldExpression) {
 // Fungsi bantu kalkulasi lokal yang aman dari XSS/eval injection
 function safeEvaluate(str) {
   let clean = str.replace(/×/g, '*').replace(/÷/g, '/');
+  
+  // Deteksi pembagian dengan nol
+  if (/\/\s*0/.test(clean)) {
+    throw new Error('Tuan Krab tidak suka pembagian gratis! 💸');
+  }
+
   // Pastikan hanya berisi angka dan operator dasar
   if (/^[0-9+\-*/().\s]+$/.test(clean)) {
     const evalResult = Function(`"use strict"; return (${clean})`)();
@@ -344,3 +356,69 @@ function showRecheckButton(orderId, oldExpression) {
   
   statusEl.appendChild(btn);
 }
+
+// Menghasilkan efek suara chime koin (cash register) dinamis lewat Web Audio API
+function playCashRegisterSound() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    
+    // Bunyi Koin 1 (Chime tinggi)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(950, ctx.currentTime);
+    osc1.frequency.exponentialRampToValueAtTime(1350, ctx.currentTime + 0.08);
+    
+    gain1.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain1.gain.exponentialRampToValueAtTime(0.005, ctx.currentTime + 0.35);
+    
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start();
+    osc1.stop(ctx.currentTime + 0.35);
+    
+    // Bunyi Koin 2 (Chime harmoni berselang sedikit)
+    setTimeout(() => {
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(1150, ctx.currentTime);
+      osc2.frequency.exponentialRampToValueAtTime(1650, ctx.currentTime + 0.12);
+      
+      gain2.gain.setValueAtTime(0.18, ctx.currentTime);
+      gain2.gain.exponentialRampToValueAtTime(0.005, ctx.currentTime + 0.45);
+      
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start();
+      osc2.stop(ctx.currentTime + 0.45);
+    }, 80);
+  } catch (e) {
+    console.error('Web Audio API not supported or blocked:', e);
+  }
+}
+
+// --- JAVASCRIPT GESTURE LOCK: Mengunci zoom in & zoom out total pada handphone ---
+// 1. Cegah pinch-to-zoom (cubit dengan dua jari atau lebih)
+document.addEventListener('touchstart', (event) => {
+  if (event.touches.length > 1) {
+    event.preventDefault();
+  }
+}, { passive: false });
+
+// 2. Cegah double-tap to zoom (ketuk layar dua kali berturut-turut cepat)
+let lastTouchEnd = 0;
+document.addEventListener('touchend', (event) => {
+  const now = (new Date()).getTime();
+  if (now - lastTouchEnd <= 300) {
+    event.preventDefault();
+  }
+  lastTouchEnd = now;
+}, { passive: false });
+
+// 3. Cegah gesture zoom di browser iOS Safari
+document.addEventListener('gesturestart', (event) => {
+  event.preventDefault();
+});
