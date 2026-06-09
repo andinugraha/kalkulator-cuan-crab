@@ -2,7 +2,7 @@
 <html lang="id">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kalkulator Cuan Crab — Hasil Premium & Presisi</title>
     <!-- Memuat font modern 'Outfit' dari Google Fonts untuk branding yang lebih premium -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -103,6 +103,17 @@
             <button class="key equals" data-action="pay">=</button>
             <button class="key operator" data-value="+">+</button>
           </div>
+        </section>
+
+        <!-- Bagian Riwayat Perhitungan -->
+        <section class="history-panel" aria-label="Riwayat Perhitungan">
+          <div class="history-header">
+            <span>Riwayat Cuan (Maks 5)</span>
+            <button id="clear-history" class="clear-history-btn" title="Hapus Riwayat">Hapus</button>
+          </div>
+          <ul id="history-list" class="history-list">
+            <!-- Item dimasukkan secara dinamis via JS -->
+          </ul>
         </section>
 
         <!-- FOOTER BRANDING -->

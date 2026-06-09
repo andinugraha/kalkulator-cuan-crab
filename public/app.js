@@ -1,10 +1,23 @@
 const expressionEl = document.querySelector('#expression');
 const statusEl = document.querySelector('#status');
 const keys = document.querySelectorAll('.key');
+const historyListEl = document.querySelector('#history-list');
+const clearHistoryBtn = document.querySelector('#clear-history');
 
 let expression = '';
 let busy = false;
 let snapLoading;
+
+// --- 2. PERBAIKAN: Inisialisasi & Pengelolaan Riwayat (History) 5 Pencarian Terakhir ---
+let searchHistory = [];
+try {
+  searchHistory = JSON.parse(localStorage.getItem('cuan_crab_history') || '[]');
+} catch (e) {
+  searchHistory = [];
+}
+
+// Render riwayat pertama kali saat aplikasi dimuat
+renderHistory();
 
 document.querySelector('.keys').addEventListener('click', (event) => {
   const button = event.target.closest('button');
@@ -53,17 +66,15 @@ async function payForResult() {
     return;
   }
 
-  // --- ⚠️ PENINGKATAN: Validasi Rumus Matematika Sebelum Bayar ---
+  // VALIDASI RUMUS MATEMATIKA
   const lastChar = expression.slice(-1);
   const invalidEndings = ['+', '-', '×', '÷', '.'];
   
-  // 1. Cek apakah rumus diakhiri oleh operator atau titik
   if (invalidEndings.includes(lastChar)) {
     setStatus('Rumus tidak lengkap atau diakhiri operator/titik.', true);
     return;
   }
 
-  // 2. Cek keselarasan tanda kurung buka dan tutup
   const openCount = (expression.match(/\(/g) || []).length;
   const closeCount = (expression.match(/\)/g) || []).length;
   if (openCount !== closeCount) {
@@ -72,7 +83,33 @@ async function payForResult() {
   }
 
   setBusy(true);
+
+  // --- 3. PERBAIKAN: Memastikan hasil kalkulator memunculkan hasil ---
+  // Jika Midtrans non-aktif di config, hitung secara lokal agar hasil selalu muncul
+  if (!window.APP_CONFIG.midtransReady) {
+    try {
+      setStatus('Menghitung hasil secara lokal...');
+      const localResult = safeEvaluate(expression);
+      const originalExpression = expression;
+      
+      expression = localResult;
+      renderExpression();
+      setStatus('Hasil Terhitung!', false);
+      
+      // Simpan hasil kalkulasi ke riwayat
+      saveToHistory(originalExpression, localResult);
+      setBusy(false);
+      return;
+    } catch (error) {
+      setStatus('Kesalahan kalkulasi lokal: ' + error.message, true);
+      setBusy(false);
+      return;
+    }
+  }
+
+  // Alur Normal (Menggunakan Midtrans)
   setStatus('Menyiapkan pembayaran...');
+  const oldExpression = expression; // Simpan rumus asli sebelum ditimpa hasil
 
   try {
     await loadSnap();
@@ -90,9 +127,8 @@ async function payForResult() {
 
     window.snap.pay(payload.token, {
       onSuccess: async () => {
-        // PERBAIKAN KEAMANAN: Menghapus markClientPaid() dari sisi klien.
-        // Sekarang backend akan mendeteksi status sukses dari Webhook Midtrans.
-        await revealResult(payload.orderId);
+        // Panggil revealResult dengan meneruskan oldExpression agar tersimpan di riwayat
+        await revealResult(payload.orderId, oldExpression);
       },
       onPending: () => {
         setStatus('Pembayaran belum selesai.');
@@ -113,10 +149,9 @@ async function payForResult() {
   }
 }
 
-async function revealResult(orderId) {
+async function revealResult(orderId, oldExpression) {
   setStatus('Memeriksa pembayaran...');
 
-  // Melakukan polling ke backend untuk mendapatkan hasil kalkulasi setelah pembayaran sukses terverifikasi
   for (let attempt = 0; attempt < 8; attempt += 1) {
     const response = await fetch(`/api/result/${encodeURIComponent(orderId)}`);
     const payload = await response.json();
@@ -124,19 +159,89 @@ async function revealResult(orderId) {
     if (response.ok) {
       expression = payload.result;
       renderExpression();
-      setStatus('');
+      setStatus('Pembayaran Sukses! Hasil muncul.', false);
       setBusy(false);
+      
+      // Simpan ke riwayat perhitungan
+      saveToHistory(oldExpression, payload.result);
       return;
     }
 
     await wait(1200);
   }
 
-  setStatus('Pembayaran diproses. Coba muat ulang sebentar lagi.');
+  setStatus('Pembayaran sedang diproses. Silakan klik cek ulang.');
   setBusy(false);
 }
 
-// FUNGSI markClientPaid SEBELUMNYA DI SINI TELAH DIAPUS TOTAL UNTUK MENCEGAH BYPASS PEMBAYARAN
+// Fungsi bantu kalkulasi lokal yang aman dari XSS/eval injection
+function safeEvaluate(str) {
+  let clean = str.replace(/×/g, '*').replace(/÷/g, '/');
+  // Pastikan hanya berisi angka dan operator dasar
+  if (/^[0-9+\-*/().\s]+$/.test(clean)) {
+    const evalResult = Function(`"use strict"; return (${clean})`)();
+    if (typeof evalResult === 'number' && !isNaN(evalResult) && isFinite(evalResult)) {
+      // Batasi desimal maksimal 8 angka di belakang koma agar tidak kepanjangan
+      return Number(evalResult.toFixed(8)).toString();
+    }
+    throw new Error('Hasil tak berhingga atau NaN');
+  }
+  throw new Error('Karakter tidak valid');
+}
+
+// Fungsi penanganan riwayat
+function saveToHistory(expr, result) {
+  const item = `${expr} = ${result}`;
+  // Bersihkan duplikat item yang sama
+  searchHistory = searchHistory.filter(i => i !== item);
+  // Masukkan item baru di paling atas
+  searchHistory.unshift(item);
+  
+  // Batasi hanya menyimpan maksimal 5 pencarian terakhir
+  if (searchHistory.length > 5) {
+    searchHistory = searchHistory.slice(0, 5);
+  }
+  
+  localStorage.setItem('cuan_crab_history', JSON.stringify(searchHistory));
+  renderHistory();
+}
+
+function renderHistory() {
+  if (!historyListEl) return;
+  historyListEl.innerHTML = '';
+
+  if (searchHistory.length === 0) {
+    historyListEl.innerHTML = '<li class="empty-history">Belum ada riwayat transaksi cuan</li>';
+    return;
+  }
+
+  searchHistory.forEach(item => {
+    const li = document.createElement('li');
+    li.className = 'history-item';
+    li.textContent = item;
+    
+    // Ketika item riwayat diklik, muat angkanya kembali ke display kalkulator
+    li.addEventListener('click', () => {
+      const parts = item.split(' = ');
+      if (parts.length > 1) {
+        expression = parts[1]; // Muat hasil kalkulasinya ke input
+        renderExpression();
+        setStatus('Dimuat dari riwayat');
+      }
+    });
+
+    historyListEl.appendChild(li);
+  });
+}
+
+if (clearHistoryBtn) {
+  clearHistoryBtn.addEventListener('click', () => {
+    searchHistory = [];
+    localStorage.removeItem('cuan_crab_history');
+    renderHistory();
+    setStatus('Riwayat dibersihkan.');
+  });
+}
 
 async function loadSnap() {
   if (!window.APP_CONFIG.midtransReady) {

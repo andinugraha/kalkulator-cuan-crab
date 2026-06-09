@@ -151,3 +151,79 @@ button {
     aspect-ratio: 1 / 0.86;
   }
 }
+
+/* --- Bagian Riwayat Perhitungan --- */
+.history-panel {
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 16px;
+  margin-top: 10px;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.clear-history-btn {
+  background: transparent;
+  border: none;
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 140ms ease;
+}
+
+.clear-history-btn:hover {
+  background: #fef2f2;
+}
+
+.history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.history-item {
+  font-size: 0.85rem;
+  padding: 8px 10px;
+  background: var(--key);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 140ms ease, transform 100ms ease;
+  word-break: break-all;
+  border: 1px solid transparent;
+  font-weight: 500;
+}
+
+.history-item:hover {
+  background: var(--key-hover);
+  border-color: var(--line);
+  transform: translateY(-1px);
+}
+
+.empty-history {
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-align: center;
+  padding: 12px 0;
+  font-style: italic;
+}
