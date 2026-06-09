@@ -53,6 +53,24 @@ async function payForResult() {
     return;
   }
 
+  // --- ⚠️ PENINGKATAN: Validasi Rumus Matematika Sebelum Bayar ---
+  const lastChar = expression.slice(-1);
+  const invalidEndings = ['+', '-', '×', '÷', '.'];
+  
+  // 1. Cek apakah rumus diakhiri oleh operator atau titik
+  if (invalidEndings.includes(lastChar)) {
+    setStatus('Rumus tidak lengkap atau diakhiri operator/titik.', true);
+    return;
+  }
+
+  // 2. Cek keselarasan tanda kurung buka dan tutup
+  const openCount = (expression.match(/\(/g) || []).length;
+  const closeCount = (expression.match(/\)/g) || []).length;
+  if (openCount !== closeCount) {
+    setStatus('Kurung buka dan kurung tutup harus seimbang.', true);
+    return;
+  }
+
   setBusy(true);
   setStatus('Menyiapkan pembayaran...');
 
@@ -72,7 +90,8 @@ async function payForResult() {
 
     window.snap.pay(payload.token, {
       onSuccess: async () => {
-        await markClientPaid(payload.orderId);
+        // PERBAIKAN KEAMANAN: Menghapus markClientPaid() dari sisi klien.
+        // Sekarang backend akan mendeteksi status sukses dari Webhook Midtrans.
         await revealResult(payload.orderId);
       },
       onPending: () => {
@@ -97,6 +116,7 @@ async function payForResult() {
 async function revealResult(orderId) {
   setStatus('Memeriksa pembayaran...');
 
+  // Melakukan polling ke backend untuk mendapatkan hasil kalkulasi setelah pembayaran sukses terverifikasi
   for (let attempt = 0; attempt < 8; attempt += 1) {
     const response = await fetch(`/api/result/${encodeURIComponent(orderId)}`);
     const payload = await response.json();
@@ -116,15 +136,7 @@ async function revealResult(orderId) {
   setBusy(false);
 }
 
-async function markClientPaid(orderId) {
-  if (!window.APP_CONFIG.clientConfirmEnabled) return;
-
-  await fetch('/api/confirm-client', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ orderId })
-  });
-}
+// FUNGSI markClientPaid SEBELUMNYA DI SINI TELAH DIAPUS TOTAL UNTUK MENCEGAH BYPASS PEMBAYARAN
 
 async function loadSnap() {
   if (!window.APP_CONFIG.midtransReady) {

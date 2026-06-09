@@ -3,45 +3,115 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Kalkulator Cuan Crab</title>
+    <title>Kalkulator Cuan Crab — Hasil Premium & Presisi</title>
+    <!-- Memuat font modern 'Outfit' dari Google Fonts untuk branding yang lebih premium -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/styles.css">
     <script src="/config.js"></script>
+    <style>
+      /* Font override khusus untuk elemen branding agar terlihat modern & techy */
+      .brand-title {
+        font-family: 'Outfit', sans-serif;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .brand-mascot {
+        font-size: 3.5rem;
+        animation: float 3s ease-in-out infinite;
+        display: inline-block;
+      }
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+      }
+      .calculator-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        width: 100%;
+        max-width: 380px;
+      }
+      .brand-header {
+        text-align: center;
+        margin-bottom: 8px;
+      }
+      .brand-subtitle {
+        color: #6b7280;
+        font-size: 0.85rem;
+        margin: 6px 0 0 0;
+        line-height: 1.4;
+      }
+      .brand-footer {
+        text-align: center;
+        font-size: 0.75rem;
+        color: #9ca3af;
+        margin-top: 8px;
+      }
+    </style>
   </head>
   <body>
     <main class="shell" aria-label="Kalkulator">
-      <section class="calculator" aria-label="Kalkulator">
-        <div class="display" aria-live="polite">
-          <div id="expression" class="expression">0</div>
-          <div id="status" class="status"></div>
-        </div>
+      <!-- Wrapper untuk menyusun elemen secara vertikal di tengah grid .shell -->
+      <div class="calculator-wrapper">
+        
+        <!-- HEADER & MASKOT BRANDING -->
+        <header class="brand-header">
+          <div class="brand-mascot" role="img" aria-label="Maskot Cuan Crab">🦀</div>
+          <h1 class="brand-title" style="margin: 4px 0 0 0; font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em;">
+            Cuan Crab
+          </h1>
+          <p class="brand-subtitle">
+            Kalkulator Paling Premium di Bikini Bottom.<br>
+            Bayar <strong>Rp1.000</strong> per perhitungan untuk hasil akurat & instan!
+          </p>
+        </header>
 
-        <div class="keys">
-          <button class="key utility" data-action="clear">C</button>
-          <button class="key utility" data-action="backspace">←</button>
-          <button class="key utility" data-value="(">(</button>
-          <button class="key utility" data-value=")">)</button>
+        <!-- KALKULATOR -->
+        <section class="calculator" aria-label="Mesin Kalkulator">
+          <div class="display" aria-live="polite">
+            <div id="expression" class="expression">0</div>
+            <div id="status" class="status"></div>
+          </div>
 
-          <button class="key" data-value="7">7</button>
-          <button class="key" data-value="8">8</button>
-          <button class="key" data-value="9">9</button>
-          <button class="key operator" data-value="÷">÷</button>
+          <div class="keys">
+            <button class="key utility" data-action="clear">C</button>
+            <button class="key utility" data-action="backspace">←</button>
+            <button class="key utility" data-value="(">(</button>
+            <button class="key utility" data-value=")">)</button>
 
-          <button class="key" data-value="4">4</button>
-          <button class="key" data-value="5">5</button>
-          <button class="key" data-value="6">6</button>
-          <button class="key operator" data-value="×">×</button>
+            <button class="key" data-value="7">7</button>
+            <button class="key" data-value="8">8</button>
+            <button class="key" data-value="9">9</button>
+            <button class="key operator" data-value="÷">÷</button>
 
-          <button class="key" data-value="1">1</button>
-          <button class="key" data-value="2">2</button>
-          <button class="key" data-value="3">3</button>
-          <button class="key operator" data-value="-">−</button>
+            <button class="key" data-value="4">4</button>
+            <button class="key" data-value="5">5</button>
+            <button class="key" data-value="6">6</button>
+            <button class="key operator" data-value="×">×</button>
 
-          <button class="key" data-value="0">0</button>
-          <button class="key" data-value=".">.</button>
-          <button class="key equals" data-action="pay">=</button>
-          <button class="key operator" data-value="+">+</button>
-        </div>
-      </section>
+            <button class="key" data-value="1">1</button>
+            <button class="key" data-value="2">2</button>
+            <button class="key" data-value="3">3</button>
+            <button class="key operator" data-value="-">−</button>
+
+            <button class="key" data-value="0">0</button>
+            <button class="key" data-value=".">.</button>
+            <button class="key equals" data-action="pay">=</button>
+            <button class="key operator" data-value="+">+</button>
+          </div>
+        </section>
+
+        <!-- FOOTER BRANDING -->
+        <footer class="brand-footer">
+          <p style="margin: 0;">Didukung oleh Krusty Krab Corp. &copy; 2026</p>
+          <p style="margin: 2px 0 0 0; color: #d1d5db; font-style: italic;">"Uang selalu benar!"</p>
+        </footer>
+
+      </div>
     </main>
 
     <script src="/app.js" type="module"></script>
