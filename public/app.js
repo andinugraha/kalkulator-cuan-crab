@@ -131,8 +131,21 @@ async function payForResult() {
         if (window.APP_CONFIG.clientConfirmEnabled) {
           await markClientPaid(payload.orderId);
         }
-        // Panggil revealResult dengan meneruskan oldExpression agar tersimpan di riwayat
-        await revealResult(payload.orderId, oldExpression);
+        
+        // --- PERBAIKAN: Langsung kalkulasi secara lokal saat sukses untuk instan respon ---
+        try {
+          const localResult = safeEvaluate(oldExpression);
+          expression = localResult;
+          renderExpression();
+          setStatus('Pembayaran Sukses! Hasil muncul.', false);
+          setBusy(false);
+          
+          // Simpan ke riwayat perhitungan
+          saveToHistory(oldExpression, localResult);
+        } catch (err) {
+          // Fallback ke server jika evaluasi lokal gagal
+          await revealResult(payload.orderId, oldExpression);
+        }
       },
       onPending: () => {
         setStatus('Pembayaran belum selesai.');
