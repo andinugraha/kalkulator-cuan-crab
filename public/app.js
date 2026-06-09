@@ -157,7 +157,7 @@ async function revealResult(orderId, oldExpression) {
   setStatus('Memeriksa pembayaran...');
 
   for (let attempt = 0; attempt < 8; attempt += 1) {
-    const response = await fetch(`/api/result/${encodeURIComponent(orderId)}`);
+    const response = await fetch(`/api/result/${encodeURIComponent(orderId)}?expression=${encodeURIComponent(oldExpression)}`);
     const payload = await response.json();
 
     if (response.ok) {

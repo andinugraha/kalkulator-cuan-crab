@@ -64,7 +64,16 @@ app.post('/api/calculate', async (req, res) => {
     }
 
     const result = evaluateExpression(expression);
-    const orderId = `CALC-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+    
+    // Kriptografi: Buat signature agar orderId hanya valid untuk ekspresi ini saja
+    const salt = crypto.randomBytes(4).toString('hex'); // 8 karakter heksadesimal
+    const secret = process.env.MIDTRANS_SERVER_KEY || 'default_secret';
+    const hash = crypto.createHmac('sha256', secret)
+      .update(`${expression}:${salt}`)
+      .digest('hex')
+      .slice(0, 16); // 16 karakter hash
+
+    const orderId = `C-${salt}-${hash}`;
 
     orders.set(orderId, {
       expression,
@@ -135,20 +144,65 @@ app.post('/api/confirm-client', (req, res) => {
   res.json({ ok: true });
 });
 
-app.get('/api/result/:orderId', (req, res) => {
-  const order = orders.get(req.params.orderId);
-  if (!order) {
-    return res.status(404).json({ error: 'Pesanan tidak ditemukan.' });
+app.get('/api/result/:orderId', async (req, res) => {
+  const { orderId } = req.params;
+  const expression = String(req.query.expression || '').trim();
+
+  if (!expression) {
+    return res.status(400).json({ error: 'Parameter expression wajib disertakan.' });
   }
 
-  if (!order.paid) {
-    return res.status(402).json({ error: 'Pembayaran belum selesai.' });
+  // 1. Validasi keaslian orderId terhadap expression
+  const parts = orderId.split('-');
+  if (parts.length !== 3 || parts[0] !== 'C') {
+    return res.status(400).json({ error: 'Order ID tidak valid.' });
   }
 
-  res.json({
-    expression: order.expression,
-    result: order.result
-  });
+  const salt = parts[1];
+  const expectedHash = parts[2];
+  const secret = process.env.MIDTRANS_SERVER_KEY || 'default_secret';
+  const hash = crypto.createHmac('sha256', secret)
+    .update(`${expression}:${salt}`)
+    .digest('hex')
+    .slice(0, 16);
+
+  if (hash !== expectedHash) {
+    return res.status(400).json({ error: 'Verifikasi rumus gagal (rumus tidak cocok dengan Order ID).' });
+  }
+
+  // 2. Cek status pembayaran
+  // Cek memori lokal terlebih dahulu (untuk testing konfirmasi client lokal)
+  const localOrder = orders.get(orderId);
+  if (localOrder && localOrder.paid) {
+    return res.json({
+      expression: localOrder.expression,
+      result: localOrder.result
+    });
+  }
+
+  // Cek langsung ke Midtrans API (Stateless - Menjamin berjalan di Vercel Serverless)
+  try {
+    const statusResponse = await coreApi.transaction.status(orderId);
+    
+    if (isPaidStatus(statusResponse.transaction_status, statusResponse.fraud_status)) {
+      const result = evaluateExpression(expression);
+      
+      // Update memori lokal jika orderId ada di Map (opsional)
+      if (localOrder) {
+        localOrder.paid = true;
+      }
+
+      return res.json({
+        expression,
+        result
+      });
+    } else {
+      return res.status(402).json({ error: 'Pembayaran belum diselesaikan.' });
+    }
+  } catch (error) {
+    console.error('Error fetching Midtrans status:', error);
+    return res.status(402).json({ error: 'Pembayaran belum diselesaikan atau tidak terdaftar.' });
+  }
 });
 
 app.listen(port, () => {
