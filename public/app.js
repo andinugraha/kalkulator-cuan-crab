@@ -127,6 +127,10 @@ async function payForResult() {
 
     window.snap.pay(payload.token, {
       onSuccess: async () => {
+        // Jika server memperbolehkan konfirmasi client (misal untuk testing lokal), kirimkan konfirmasi
+        if (window.APP_CONFIG.clientConfirmEnabled) {
+          await markClientPaid(payload.orderId);
+        }
         // Panggil revealResult dengan meneruskan oldExpression agar tersimpan di riwayat
         await revealResult(payload.orderId, oldExpression);
       },
@@ -170,7 +174,8 @@ async function revealResult(orderId, oldExpression) {
     await wait(1200);
   }
 
-  setStatus('Pembayaran sedang diproses. Silakan klik cek ulang.');
+  // Jika setelah 8 kali polling masih belum dibayar (timeout)
+  showRecheckButton(orderId, oldExpression);
   setBusy(false);
 }
 
@@ -287,4 +292,42 @@ function toDisplayOperator(key) {
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Fungsi konfirmasi client (diaktifkan saat testing lokal jika diizinkan server)
+async function markClientPaid(orderId) {
+  try {
+    await fetch('/api/confirm-client', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId })
+    });
+  } catch (e) {
+    console.error('Gagal mengirim konfirmasi client:', e);
+  }
+}
+
+// Menampilkan tombol "Cek Status" secara dinamis di elemen status
+function showRecheckButton(orderId, oldExpression) {
+  statusEl.innerHTML = 'Pembayaran sedang diproses. ';
+  
+  const btn = document.createElement('button');
+  btn.className = 'recheck-btn';
+  btn.textContent = 'Cek Status';
+  btn.style.marginLeft = '8px';
+  btn.style.padding = '2px 8px';
+  btn.style.background = 'var(--accent)';
+  btn.style.color = '#fff';
+  btn.style.border = 'none';
+  btn.style.borderRadius = '4px';
+  btn.style.cursor = 'pointer';
+  btn.style.fontSize = '11px';
+  btn.style.fontWeight = '600';
+  
+  btn.addEventListener('click', async () => {
+    setBusy(true);
+    await revealResult(orderId, oldExpression);
+  });
+  
+  statusEl.appendChild(btn);
 }
