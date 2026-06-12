@@ -1,5 +1,3 @@
-import { evaluateExpression } from './calculator.js';
-
 const expressionEl = document.querySelector('#expression');
 const statusEl = document.querySelector('#status');
 const keys = document.querySelectorAll('.key');
@@ -9,12 +7,93 @@ const historyToggleBtn = document.querySelector('#history-toggle-btn');
 const historyPopover = document.querySelector('#history-popover');
 const degBtn = document.querySelector('.deg-btn');
 const radBtn = document.querySelector('.rad-btn');
+const themeToggleBtn = document.querySelector('#theme-toggle-btn');
+const siteHeader = document.querySelector('.site-header');
+const burgerBtn = document.querySelector('#burger-btn');
+const navLinks = document.querySelectorAll('.nav-link');
+const pageSections = document.querySelectorAll('[data-page-section]');
+
+const currentTheme = localStorage.getItem('scientific_calc_theme') || 'light';
+const isGoldUnlocked = localStorage.getItem('unlocked_gold') === '1';
+
+if (isGoldUnlocked) {
+  document.body.classList.add('gold-theme');
+} else if (currentTheme === 'dark') {
+  document.body.classList.add('dark-theme');
+}
+
+if (themeToggleBtn) {
+  themeToggleBtn.addEventListener('click', () => {
+    if (isGoldUnlocked) {
+      document.body.classList.toggle('gold-theme');
+      if (!document.body.classList.contains('gold-theme') && currentTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+      } else {
+        document.body.classList.remove('dark-theme');
+      }
+    } else {
+      document.body.classList.toggle('dark-theme');
+      const isDark = document.body.classList.contains('dark-theme');
+      localStorage.setItem('scientific_calc_theme', isDark ? 'dark' : 'light');
+    }
+  });
+}
+
+if (burgerBtn && siteHeader) {
+  burgerBtn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const isOpen = siteHeader.classList.toggle('nav-open');
+    burgerBtn.setAttribute('aria-expanded', String(isOpen));
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!siteHeader.contains(event.target)) {
+      siteHeader.classList.remove('nav-open');
+      burgerBtn.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
+
+navLinks.forEach((link) => {
+  link.addEventListener('click', () => {
+    showPage(link.dataset.page || 'calculator');
+  });
+});
+
+function showPage(page) {
+  const pageExists = [...pageSections].some((section) => section.dataset.pageSection === page);
+  const nextPage = pageExists ? page : 'calculator';
+
+  pageSections.forEach((section) => {
+    section.classList.toggle('active', section.dataset.pageSection === nextPage);
+  });
+
+  navLinks.forEach((link) => {
+    link.classList.toggle('active', link.dataset.page === nextPage);
+  });
+
+  if (siteHeader && burgerBtn) {
+    siteHeader.classList.remove('nav-open');
+    burgerBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  if (nextPage === 'calculator') {
+    history.replaceState(null, '', window.location.pathname);
+  } else {
+    history.replaceState(null, '', `#${nextPage}`);
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+showPage((window.location.hash || '#calculator').replace('#', ''));
 
 let expression = '';
 let busy = false;
 let snapLoading;
 let lastAnswer = '';
 let angleMode = 'deg'; // default mode derajat
+let spoilerTimer;
 
 // --- Inisialisasi & Pengelolaan Riwayat (History) ---
 let searchHistory = [];
@@ -73,6 +152,36 @@ if (historyToggleBtn && historyPopover) {
   });
 }
 
+async function fetchSpoiler() {
+  if (busy || !expression) {
+    if (!busy) setStatus('');
+    return;
+  }
+  try {
+    const response = await fetch('/api/spoiler', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expression, mode: angleMode })
+    });
+    if (busy) return; // Mencegah overwrite jika status berubah saat fetch
+    const payload = await response.json();
+    if (payload.spoiler) {
+      setStatus(`Tagihan Rp ${payload.price.toLocaleString('id-ID')} | Spoiler: ${payload.spoiler}`);
+    } else {
+      setStatus('');
+    }
+  } catch (err) {
+    if (!busy) setStatus('');
+  }
+}
+
+function triggerSpoiler() {
+  if (busy) return;
+  clearTimeout(spoilerTimer);
+  setStatus('Menganalisa...');
+  spoilerTimer = setTimeout(fetchSpoiler, 400);
+}
+
 function appendValue(value) {
   if (expression === '0' && value !== '.' && !isOperatorChar(value)) {
     expression = value;
@@ -81,6 +190,7 @@ function appendValue(value) {
   }
   setStatus('');
   renderExpression();
+  triggerSpoiler();
 }
 
 function isOperatorChar(char) {
@@ -91,11 +201,12 @@ function clearExpression() {
   expression = '';
   setStatus('');
   renderExpression();
+  clearTimeout(spoilerTimer);
 }
 
 function backspace() {
   // Hapus nama fungsi ilmiah secara utuh jika berada di akhir rumus
-  const scientificFuncs = ['sin(', 'cos(', 'tan(', 'log(', 'ln(', 'sqrt('];
+  const scientificFuncs = ['asin(', 'acos(', 'atan(', 'sin(', 'cos(', 'tan(', 'log(', 'ln(', '√('];
   let deleted = false;
   for (const func of scientificFuncs) {
     if (expression.endsWith(func)) {
@@ -109,6 +220,7 @@ function backspace() {
   }
   setStatus('');
   renderExpression();
+  triggerSpoiler();
 }
 
 function setAngleMode(mode) {
@@ -125,7 +237,28 @@ function setAngleMode(mode) {
 
 function toggleInv(btn) {
   btn.classList.toggle('active');
-  setStatus('Inverse mode toggled');
+  const isInv = btn.classList.contains('active');
+  const mapping = {
+    'sin(': isInv ? 'asin(' : 'sin(',
+    'cos(': isInv ? 'acos(' : 'cos(',
+    'tan(': isInv ? 'atan(' : 'tan('
+  };
+  const textMapping = {
+    'sin(': isInv ? 'sin⁻¹' : 'sin',
+    'cos(': isInv ? 'cos⁻¹' : 'cos',
+    'tan(': isInv ? 'tan⁻¹' : 'tan'
+  };
+
+  document.querySelectorAll('.key.scientific').forEach(key => {
+    const baseVal = key.dataset.baseValue || key.dataset.value;
+    if (mapping[baseVal]) {
+      if (!key.dataset.baseValue) key.dataset.baseValue = baseVal;
+      key.dataset.value = mapping[baseVal];
+      key.textContent = textMapping[baseVal];
+    }
+  });
+
+  setStatus('Inverse mode ' + (isInv ? 'on' : 'off'));
 }
 
 async function payForResult() {
@@ -143,20 +276,28 @@ async function payForResult() {
   }
 
   setBusy(true);
+  setStatus('Menyiapkan perhitungan...');
+  const oldExpression = expression;
 
   // Jika Midtrans non-aktif di config, hitung secara lokal (Offline/Offline Dev mode)
   if (!window.APP_CONFIG.midtransReady) {
     try {
-      setStatus('Menghitung...');
-      const localResult = evaluateExpression(expression, angleMode);
-      lastAnswer = localResult;
+      const response = await fetch('/api/calculate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ expression: oldExpression, mode: angleMode })
+      });
+      const payload = await response.json();
       
-      const originalExpression = expression;
-      expression = localResult;
+      if (!response.ok) {
+        throw new Error(payload.error || 'Perhitungan gagal.');
+      }
+      
+      lastAnswer = payload.result;
+      expression = payload.result;
       renderExpression();
       setStatus('');
-      
-      saveToHistory(originalExpression, localResult);
+      saveToHistory(oldExpression, payload.result);
       setBusy(false);
       return;
     } catch (error) {
@@ -168,7 +309,6 @@ async function payForResult() {
 
   // Alur Normal (Menggunakan Midtrans)
   setStatus('Menyiapkan pembayaran...');
-  const oldExpression = expression;
 
   try {
     await loadSnap();
@@ -176,7 +316,7 @@ async function payForResult() {
     const response = await fetch('/api/calculate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ expression, mode: angleMode })
+      body: JSON.stringify({ expression: oldExpression, mode: angleMode })
     });
     const payload = await response.json();
 
@@ -184,24 +324,14 @@ async function payForResult() {
       throw new Error(payload.error || 'Pembayaran gagal dibuat.');
     }
 
+    setStatus('Menunggu pembayaran...');
+
     window.snap.pay(payload.token, {
       onSuccess: async () => {
         if (window.APP_CONFIG.clientConfirmEnabled) {
           await markClientPaid(payload.orderId);
         }
-        
-        try {
-          const localResult = evaluateExpression(oldExpression, angleMode);
-          lastAnswer = localResult;
-          expression = localResult;
-          renderExpression();
-          setStatus('');
-          playCashRegisterSound();
-          saveToHistory(oldExpression, localResult);
-          setBusy(false);
-        } catch (err) {
-          await revealResult(payload.orderId, oldExpression);
-        }
+        await revealResult(payload.orderId, oldExpression);
       },
       onPending: () => {
         setStatus('Pembayaran belum selesai.');
@@ -240,6 +370,22 @@ async function revealResult(orderId, oldExpression) {
       playCashRegisterSound();
       saveToHistory(oldExpression, payload.result);
       setBusy(false);
+
+      // Fitur Viral: Gacha Tema Emas
+      if (payload.isJackpot) {
+        localStorage.setItem('unlocked_gold', '1');
+        document.body.classList.add('gold-theme');
+        alert("✨ JACKPOT! Anda membuka TEMA EMAS SULTAN! ✨");
+      }
+
+      // Tampilkan modal sertifikat tanpa prompt tambahan setelah pembayaran.
+      const modal = document.getElementById('result-modal');
+      const roastEl = document.getElementById('modal-roast');
+      roastEl.textContent = payload.roast || '';
+      modal.classList.remove('hidden');
+
+      drawCertificate('Pengguna Kalkulator', oldExpression, payload.result, payload.price);
+
       return;
     }
 
@@ -446,6 +592,294 @@ function playCashRegisterSound() {
   } catch (e) {
     console.error('Web Audio API not supported or blocked:', e);
   }
+}
+
+// Modal Close & Download
+document.getElementById('close-modal-btn')?.addEventListener('click', () => {
+  document.getElementById('result-modal').classList.add('hidden');
+});
+
+document.getElementById('download-cert-btn')?.addEventListener('click', () => {
+  const canvas = document.getElementById('certificate-canvas');
+  const link = document.createElement('a');
+  link.download = 'Sertifikat_Apresiasi_Kalkulator.png';
+  link.href = canvas.toDataURL();
+  link.click();
+});
+
+document.getElementById('share-ig-btn')?.addEventListener('click', async () => {
+  const canvas = document.getElementById('certificate-canvas');
+  if (!canvas) return;
+
+  try {
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], 'sertifikat_apresiasi_kalkulator.png', { type: 'image/png' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'Sertifikat Apresiasi Kalkulator',
+          text: 'Saya baru saja membuka hasil kalkulator premium.'
+        });
+      } else {
+        alert("Browser Anda tidak mendukung share langsung. Silakan unduh sertifikat ini terlebih dahulu, lalu unggah manual ke Instagram Story Anda!");
+      }
+    }, 'image/png');
+  } catch (err) {
+    console.error("Share gagal", err);
+    alert("Gagal membagikan. Silakan unduh secara manual.");
+  }
+});
+
+// Gambar sertifikat portrait bergaya geometris biru-putih.
+function drawCertificate(name, expression, result, price) {
+  const canvas = document.getElementById('certificate-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  canvas.width = 1080;
+  canvas.height = 1920;
+
+  const blue = '#0b55c5';
+  const cyan = '#16a7e8';
+  const navy = '#12356f';
+  const gold = '#f7bf1e';
+  const ink = '#1f2937';
+  const muted = '#5b6472';
+
+  ctx.fillStyle = '#fbfdff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  gradient.addColorStop(0, 'rgba(22, 167, 232, 0.10)');
+  gradient.addColorStop(0.45, 'rgba(255, 255, 255, 0)');
+  gradient.addColorStop(1, 'rgba(11, 85, 197, 0.12)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  drawGeometricCertificateDecor(ctx, canvas.width, canvas.height, blue, cyan, gold);
+
+  ctx.strokeStyle = 'rgba(11, 85, 197, 0.18)';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(64, 64, 952, 1792);
+
+  ctx.strokeStyle = gold;
+  ctx.lineWidth = 4;
+  ctx.strokeRect(88, 88, 904, 1744);
+
+  ctx.fillStyle = navy;
+  ctx.textAlign = 'center';
+  ctx.font = '700 92px Arial, sans-serif';
+  ctx.fillText('SERTIFIKAT', 540, 318);
+
+  ctx.font = '500 34px Arial, sans-serif';
+  ctx.fillText('A P R E S I A S I', 540, 376);
+
+  ctx.strokeStyle = cyan;
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(258, 420);
+  ctx.lineTo(822, 420);
+  ctx.stroke();
+
+  ctx.fillStyle = muted;
+  ctx.font = '400 31px Arial, sans-serif';
+  ctx.fillText('Dengan bangga dipersembahkan kepada:', 540, 560);
+
+  ctx.fillStyle = cyan;
+  fitCenteredText(ctx, name.toUpperCase(), 540, 710, 780, 92, 48, 'Arial, sans-serif', 800);
+
+  ctx.fillStyle = ink;
+  ctx.font = '400 32px Arial, sans-serif';
+  ctx.fillText('sebagai', 540, 795);
+
+  drawBadge(ctx, 540, 875, 'PEMBUKA HASIL');
+
+  ctx.fillStyle = ink;
+  ctx.font = '400 31px Arial, sans-serif';
+  wrapCanvasText(
+    ctx,
+    `Telah menyelesaikan perhitungan "${expression}" dan berhasil membuka hasil premium dengan kontribusi sebesar Rp ${Number(price || 0).toLocaleString('id-ID')}.`,
+    540,
+    1015,
+    760,
+    46
+  );
+
+  ctx.fillStyle = muted;
+  ctx.font = '400 28px Arial, sans-serif';
+  ctx.fillText('Hasil perhitungan', 540, 1240);
+
+  ctx.fillStyle = blue;
+  fitCenteredText(ctx, String(result), 540, 1362, 760, 116, 48, 'Courier New, monospace', 800);
+
+  drawMedal(ctx, 540, 1550, gold, navy);
+  drawSignatureLine(ctx, 245, 1698, 'Kalkulator Premium');
+  drawSignatureLine(ctx, 835, 1698, 'Sistem Pembayaran');
+
+  ctx.fillStyle = '#8b95a3';
+  ctx.font = '600 26px Arial, sans-serif';
+  ctx.fillText('cuancrab.online', 540, 1812);
+}
+
+function drawGeometricCertificateDecor(ctx, width, height, blue, cyan, gold) {
+  ctx.save();
+  ctx.fillStyle = cyan;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(200, 0);
+  ctx.lineTo(0, 210);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = blue;
+  ctx.beginPath();
+  ctx.moveTo(width, 0);
+  ctx.lineTo(width - 170, 0);
+  ctx.lineTo(width, 170);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = gold;
+  ctx.fillRect(142, 82, 190, 28);
+  ctx.fillRect(width - 336, height - 116, 196, 28);
+
+  ctx.fillStyle = cyan;
+  ctx.beginPath();
+  ctx.arc(0, height, 178, Math.PI * 1.5, Math.PI * 2);
+  ctx.lineTo(0, height);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = blue;
+  ctx.beginPath();
+  ctx.arc(width, height, 220, Math.PI, Math.PI * 1.5);
+  ctx.lineTo(width, height);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = blue;
+  ctx.lineWidth = 6;
+  for (let i = 0; i < 7; i += 1) {
+    ctx.beginPath();
+    ctx.arc(width - 118 - (i * 22), 92, 22 + (i * 2), 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = gold;
+  for (let row = 0; row < 3; row += 1) {
+    for (let col = 0; col < 12; col += 1) {
+      ctx.beginPath();
+      ctx.arc(176 + col * 24, 220 + row * 22, 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  ctx.strokeStyle = gold;
+  ctx.lineWidth = 7;
+  for (let i = 0; i < 5; i += 1) {
+    ctx.beginPath();
+    ctx.moveTo(width - 240 + i * 30, height - 250);
+    ctx.lineTo(width - 196 + i * 30, height - 294);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawBadge(ctx, x, y, text) {
+  ctx.save();
+  ctx.strokeStyle = '#f7bf1e';
+  ctx.fillStyle = '#ffffff';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(x - 228, y - 42);
+  ctx.lineTo(x + 198, y - 42);
+  ctx.lineTo(x + 228, y);
+  ctx.lineTo(x + 198, y + 42);
+  ctx.lineTo(x - 228, y + 42);
+  ctx.lineTo(x - 198, y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = '#12356f';
+  ctx.font = '700 34px Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(text, x, y + 12);
+  ctx.restore();
+}
+
+function drawMedal(ctx, x, y, gold, navy) {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(18, 53, 111, 0.42)';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(x - 142, y - 10);
+  ctx.lineTo(x - 268, y - 10);
+  ctx.moveTo(x + 142, y - 10);
+  ctx.lineTo(x + 268, y - 10);
+  ctx.stroke();
+
+  const medalGradient = ctx.createRadialGradient(x - 36, y - 44, 10, x, y, 82);
+  medalGradient.addColorStop(0, '#fff7b8');
+  medalGradient.addColorStop(0.48, gold);
+  medalGradient.addColorStop(1, '#c88900');
+  ctx.fillStyle = medalGradient;
+  ctx.beginPath();
+  ctx.arc(x, y, 72, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#d29b08';
+  ctx.lineWidth = 8;
+  ctx.stroke();
+
+  ctx.fillStyle = navy;
+  ctx.font = '700 42px Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('OK', x, y + 15);
+  ctx.restore();
+}
+
+function drawSignatureLine(ctx, x, y, label) {
+  ctx.save();
+  ctx.strokeStyle = '#16a7e8';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(x - 142, y);
+  ctx.lineTo(x + 142, y);
+  ctx.stroke();
+  ctx.fillStyle = '#1f2937';
+  ctx.font = '500 25px Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(label, x, y + 42);
+  ctx.restore();
+}
+
+function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = String(text).split(/\s+/);
+  let line = '';
+  let currentY = y;
+
+  for (const word of words) {
+    const testLine = line ? `${line} ${word}` : word;
+    if (ctx.measureText(testLine).width > maxWidth && line) {
+      ctx.fillText(line, x, currentY);
+      line = word;
+      currentY += lineHeight;
+    } else {
+      line = testLine;
+    }
+  }
+
+  if (line) ctx.fillText(line, x, currentY);
+}
+
+function fitCenteredText(ctx, text, x, y, maxWidth, startSize, minSize, family, weight) {
+  let fontSize = startSize;
+  do {
+    ctx.font = `${weight} ${fontSize}px ${family}`;
+    fontSize -= 2;
+  } while (ctx.measureText(text).width > maxWidth && fontSize >= minSize);
+
+  ctx.fillText(text, x, y);
 }
 
 // Pencegahan Zoom pada Mobile

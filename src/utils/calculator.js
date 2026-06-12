@@ -24,6 +24,20 @@ const functions = {
     if (cosVal === 0) throw new Error('Tan tidak terdefinisi (pembagian dengan nol).');
     return cleanFloat(Math.tan(val));
   },
+  'asin': (x, mode) => {
+    if (x < -1 || x > 1) throw new Error('Input asin harus antara -1 dan 1.');
+    const res = Math.asin(x);
+    return mode === 'deg' ? res * (180 / Math.PI) : res;
+  },
+  'acos': (x, mode) => {
+    if (x < -1 || x > 1) throw new Error('Input acos harus antara -1 dan 1.');
+    const res = Math.acos(x);
+    return mode === 'deg' ? res * (180 / Math.PI) : res;
+  },
+  'atan': (x, mode) => {
+    const res = Math.atan(x);
+    return mode === 'deg' ? res * (180 / Math.PI) : res;
+  },
   'log': (x) => {
     if (x <= 0) throw new Error('Logaritma hanya untuk bilangan positif.');
     return Math.log10(x);
@@ -153,8 +167,11 @@ function tokenize(expression) {
 
   while (index < expression.length) {
     const char = expression[index];
+    const lastToken = tokens.length > 0 ? tokens[tokens.length - 1] : null;
+    const isLastTokenValue = typeof lastToken === 'number' || lastToken === ')' || lastToken === '%' || lastToken === '!' || lastToken === Math.PI || lastToken === Math.E;
 
     if (char === '(') {
+      if (isLastTokenValue) tokens.push('*');
       tokens.push(char);
       index += 1;
       expectingNumber = true;
@@ -182,9 +199,9 @@ function tokenize(expression) {
       continue;
     }
 
-    // Cek Fungsi Ilmiah (sin, cos, tan, log, ln, sqrt)
+    // Cek Fungsi Ilmiah
     let matchedFunc = null;
-    const funcs = ['sin', 'cos', 'tan', 'log', 'ln'];
+    const funcs = ['asin', 'acos', 'atan', 'sin', 'cos', 'tan', 'log', 'ln'];
     for (const f of funcs) {
       if (expression.startsWith(f, index)) {
         matchedFunc = f;
@@ -196,6 +213,7 @@ function tokenize(expression) {
     }
 
     if (matchedFunc) {
+      if (isLastTokenValue) tokens.push('*');
       tokens.push(matchedFunc);
       index += (char === '√' ? 1 : matchedFunc.length);
       expectingNumber = true;
@@ -204,6 +222,7 @@ function tokenize(expression) {
 
     // Cek Konstanta Pi (π)
     if (char === 'π') {
+      if (isLastTokenValue) tokens.push('*');
       tokens.push(Math.PI);
       index += 1;
       expectingNumber = false;
@@ -214,6 +233,7 @@ function tokenize(expression) {
     // Hanya dicocokkan sebagai konstanta jika ia tidak diikuti huruf alfabet lain
     // (misal bukan bagian dari notasi ilmiah atau fungsi)
     if (char === 'e' && !/^[A-Za-z]/.test(expression.slice(index + 1))) {
+      if (isLastTokenValue) tokens.push('*');
       tokens.push(Math.E);
       index += 1;
       expectingNumber = false;
@@ -239,6 +259,8 @@ function tokenize(expression) {
     if (!rawNumber || rawNumber === '-' || rawNumber === '.') {
       throw new Error('Format angka tidak valid.');
     }
+
+    if (isLastTokenValue) tokens.push('*');
 
     tokens.push(Number(rawNumber));
     index += rawNumber.length;
