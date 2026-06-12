@@ -3,14 +3,40 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kalkulator Ilmiah Premium</title>
-    <meta name="description" content="Kalkulator ilmiah premium dengan fitur pembayaran hasil matematika, mendukung perhitungan fungsi trigonometri, logaritma, dan faktorial.">
-    
-    <!-- Open Graph Tags -->
-    <meta property="og:title" content="Kalkulator Ilmiah Premium">
+    <title>Kalkulator Ilmiah Premium Online</title>
+    <meta name="description" content="Kalkulator ilmiah premium online dengan fitur trigonometri, logaritma, faktorial, dan pembayaran digital. Hitung rumus kompleks dengan akurasi tinggi.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cuancrab.online/">
+
+    <meta property="og:title" content="Kalkulator Ilmiah Premium Online">
     <meta property="og:description" content="Hitung operasi matematika kompleks dengan akurasi tinggi menggunakan kalkulator ilmiah online.">
     <meta property="og:type" content="website">
-    <!-- Memuat font Roboto untuk branding yang bersih, polos, dan profesional -->
+    <meta property="og:url" content="https://cuancrab.online/">
+    <meta property="og:locale" content="id_ID">
+    <meta property="og:site_name" content="Kalkulator Premium">
+
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Kalkulator Ilmiah Premium Online">
+    <meta name="twitter:description" content="Hitung operasi matematika kompleks dengan akurasi tinggi menggunakan kalkulator ilmiah online.">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Kalkulator Premium",
+      "url": "https://cuancrab.online/",
+      "applicationCategory": "CalculatorApplication",
+      "operatingSystem": "Web",
+      "inLanguage": "id",
+      "description": "Kalkulator ilmiah online dengan fitur trigonometri, logaritma, faktorial, dan pembayaran digital.",
+      "offers": {
+        "@type": "Offer",
+        "priceCurrency": "IDR",
+        "price": "1000"
+      }
+    }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -18,35 +44,28 @@
     <script src="/config.js"></script>
   </head>
   <body>
-    <!-- Aksesibilitas Screen Reader -->
-    <h1 class="sr-only">Kalkulator Ilmiah Online Premium</h1>
-
     <header class="site-header">
       <button id="burger-btn" class="burger-btn" type="button" aria-label="Buka menu" aria-expanded="false">
         <span></span>
         <span></span>
         <span></span>
       </button>
-      <button class="brand-btn nav-link active" type="button" data-page="calculator">Kalkulator Premium</button>
+      <a class="brand-btn nav-link active" href="/">Kalkulator Premium</a>
       <nav id="site-nav" class="site-nav" aria-label="Navigasi halaman">
-        <button class="nav-link active" type="button" data-page="calculator">Kalkulator</button>
-        <button class="nav-link" type="button" data-page="product">Produk/Jasa</button>
-        <button class="nav-link" type="button" data-page="about">Tentang Kami</button>
-        <button class="nav-link" type="button" data-page="contact">Kontak</button>
-        <button class="nav-link" type="button" data-page="privacy">Privasi</button>
-        <button class="nav-link" type="button" data-page="terms">Syarat</button>
-        <button class="nav-link" type="button" data-page="refund">Refund</button>
-        <button class="nav-link" type="button" data-page="faq">FAQ</button>
+        <a class="nav-link active" href="/">Kalkulator</a>
+        <a class="nav-link" href="/produk">Produk/Jasa</a>
+        <a class="nav-link" href="/tentang">Tentang Kami</a>
+        <a class="nav-link" href="/kontak">Kontak</a>
+        <a class="nav-link" href="/privasi">Privasi</a>
+        <a class="nav-link" href="/syarat">Syarat</a>
+        <a class="nav-link" href="/refund">Refund</a>
+        <a class="nav-link" href="/faq">FAQ</a>
       </nav>
     </header>
 
-    <main class="shell page-section active" data-page-section="calculator" aria-label="Kalkulator">
+    <main class="shell" aria-label="Kalkulator">
       <div class="calculator-wrapper">
-        
-        <!-- KALKULATOR -->
         <section class="calculator" aria-label="Mesin Kalkulator">
-          
-          <!-- DISPLAY -->
           <div class="display" aria-live="polite">
             <div class="display-header">
               <div class="left-icons">
@@ -63,28 +82,21 @@
               </div>
             </div>
 
-            <!-- Teks Rumus & Status Hasil -->
             <div class="display-text-container">
               <div id="expression" class="expression">0</div>
               <div id="status" class="status"></div>
             </div>
-
           </div>
 
-          <!-- Panel Riwayat Melayang (Expandable) -->
           <div id="history-popover" class="history-popover hidden">
             <div class="history-popover-header">
               <span>Riwayat Perhitungan</span>
               <button id="clear-history" class="clear-history-btn">Hapus</button>
             </div>
-            <ul id="history-list" class="history-list">
-              <!-- Item diisi dinamis via JS -->
-            </ul>
+            <ul id="history-list" class="history-list"></ul>
           </div>
 
-          <!-- GRID TOMBOL (Dikelompokkan untuk Responsivitas) -->
           <div class="keys">
-            <!-- Tombol Ilmiah (3 Kolom di Desktop, 5 Kolom di Mobile) -->
             <div class="keys-scientific">
               <button class="key scientific deg-btn active" data-action="set-deg">Deg</button>
               <button class="key scientific rad-btn" data-action="set-rad">Rad</button>
@@ -103,28 +115,27 @@
               <button class="key scientific" data-value="^">xʸ</button>
             </div>
 
-            <!-- Tombol Standar (4 Kolom) -->
             <div class="keys-standard">
               <button class="key scientific" data-value="(">(</button>
               <button class="key scientific" data-value=")">)</button>
               <button class="key scientific" data-value="%">%</button>
               <button class="key utility" data-action="clear">AC</button>
-              
+
               <button class="key number" data-value="7">7</button>
               <button class="key number" data-value="8">8</button>
               <button class="key number" data-value="9">9</button>
               <button class="key operator" data-value="÷">÷</button>
-              
+
               <button class="key number" data-value="4">4</button>
               <button class="key number" data-value="5">5</button>
               <button class="key number" data-value="6">6</button>
               <button class="key operator" data-value="×">×</button>
-              
+
               <button class="key number" data-value="1">1</button>
               <button class="key number" data-value="2">2</button>
               <button class="key number" data-value="3">3</button>
               <button class="key operator" data-value="−">−</button>
-              
+
               <button class="key number" data-value="0">0</button>
               <button class="key number" data-value=".">.</button>
               <button class="key equals" data-action="pay">=</button>
@@ -132,111 +143,26 @@
             </div>
           </div>
         </section>
-
       </div>
     </main>
 
-    <section class="content-shell page-section" data-page-section="product" aria-label="Informasi Produk dan Jasa">
-      <article class="notepad-page">
-        <button class="back-to-calculator nav-link" type="button" data-page="calculator">Kembali ke Kalkulator</button>
-        <h2>Informasi Produk/Jasa</h2>
-        <p><strong>Kalkulator Premium</strong> adalah kalkulator online berbayar untuk hiburan. Pengguna memasukkan rumus, melihat estimasi biaya, membayar, lalu hasil ditampilkan secara digital.</p>
-        <p>Layanan mencakup perhitungan dasar dan ilmiah seperti tambah, kurang, kali, bagi, pangkat, akar, logaritma, trigonometri, persen, dan faktorial sesuai fitur aplikasi.</p>
-        <p>Produk bersifat digital, instan, dan tidak dikirim dalam bentuk fisik. Sertifikat digital yang muncul setelah pembayaran adalah fitur hiburan.</p>
-      </article>
-    </section>
+    <footer class="site-footer">
+      <p>&copy; 2026 Kalkulator Premium &mdash; <a href="https://cuancrab.online">cuancrab.online</a></p>
+      <nav class="footer-nav" aria-label="Tautan footer">
+        <a href="/privasi">Privasi</a>
+        <a href="/syarat">Syarat</a>
+        <a href="/refund">Refund</a>
+        <a href="/kontak">Kontak</a>
+      </nav>
+    </footer>
 
-    <section class="content-shell page-section" data-page-section="about" aria-label="Tentang Kami">
-      <article class="notepad-page">
-        <button class="back-to-calculator nav-link" type="button" data-page="calculator">Kembali ke Kalkulator</button>
-        <h2>Tentang Kami</h2>
-        <p>Kalkulator Premium dibuat sebagai layanan digital ringan, praktis, dan bernuansa meme untuk menghitung angka dengan cara yang tidak terlalu serius, tetapi tetap transparan dalam pembayaran.</p>
-        <p>Kami menampilkan harga sebelum transaksi, memproses pembayaran melalui payment gateway, dan menyediakan kontak bantuan untuk kendala transaksi.</p>
-        <p>Nama usaha/brand: Kalkulator Premium</p>
-        <p>Website: cuancrab.online</p>
-        <p>Jenis usaha: Layanan digital berbasis website</p>
-      </article>
-    </section>
-
-    <section class="content-shell page-section" data-page-section="contact" aria-label="Kontak">
-      <article class="notepad-page">
-        <button class="back-to-calculator nav-link" type="button" data-page="calculator">Kembali ke Kalkulator</button>
-        <h2>Kontak</h2>
-        <p>Untuk pertanyaan, kendala pembayaran, atau bantuan layanan, hubungi kami melalui:</p>
-        <p>Email layanan pelanggan: support@cuancrab.online</p>
-        <p>WhatsApp/Telepon: +62 812-0000-0000</p>
-        <p>Website: https://cuancrab.online</p>
-        <p>Jam operasional: Senin sampai Jumat, pukul 09.00 sampai 17.00 WIB, kecuali hari libur nasional.</p>
-        <p>Sertakan nomor order, tanggal transaksi, nominal pembayaran, dan ringkasan kendala agar pengecekan lebih cepat.</p>
-      </article>
-    </section>
-
-    <section class="content-shell page-section" data-page-section="privacy" aria-label="Kebijakan Privasi">
-      <article class="notepad-page">
-        <button class="back-to-calculator nav-link" type="button" data-page="calculator">Kembali ke Kalkulator</button>
-        <h2>Kebijakan Privasi</h2>
-        <p>Terakhir diperbarui: 13 Juni 2026</p>
-        <p>Kami dapat memproses data rumus, nomor order, nominal pembayaran, status pembayaran, waktu transaksi, data teknis dasar, dan data kontak yang pengguna berikan saat meminta bantuan.</p>
-        <p>Data digunakan untuk menjalankan layanan, memverifikasi pembayaran, memberi dukungan pelanggan, menjaga keamanan sistem, dan memenuhi kewajiban hukum.</p>
-        <p>Pembayaran diproses oleh payment gateway pihak ketiga. Kami tidak menyimpan PIN, password perbankan, data kartu lengkap, atau kredensial pembayaran sensitif.</p>
-        <p>Kami tidak menjual data pribadi pengguna. Data dapat dibagikan kepada payment gateway, penyedia hosting, atau pihak berwenang apabila diperlukan secara hukum.</p>
-      </article>
-    </section>
-
-    <section class="content-shell page-section" data-page-section="terms" aria-label="Syarat dan Ketentuan">
-      <article class="notepad-page">
-        <button class="back-to-calculator nav-link" type="button" data-page="calculator">Kembali ke Kalkulator</button>
-        <h2>Syarat &amp; Ketentuan</h2>
-        <p>Terakhir diperbarui: 13 Juni 2026</p>
-        <p>Dengan menggunakan Kalkulator Premium, pengguna menyetujui bahwa layanan ini adalah layanan digital hiburan berbasis website.</p>
-        <p>Harga layanan ditampilkan sebelum pembayaran. Dengan melanjutkan pembayaran, pengguna menyetujui nominal biaya yang ditampilkan. Pembayaran diproses melalui payment gateway pihak ketiga dan tunduk pada ketentuan penyedia pembayaran tersebut.</p>
-        <p>Pengguna bertanggung jawab atas rumus yang dimasukkan. Hasil perhitungan wajib diperiksa kembali sebelum digunakan untuk keputusan penting.</p>
-        <p>Pengguna dilarang menyalahgunakan sistem, memanipulasi harga, mengganggu payment gateway, atau melakukan aktivitas yang melanggar hukum.</p>
-        <p>Kami dapat memperbarui fitur, harga, atau tampilan layanan untuk kebutuhan operasional, keamanan, dan kepatuhan.</p>
-      </article>
-    </section>
-
-    <section class="content-shell page-section" data-page-section="refund" aria-label="Kebijakan Refund">
-      <article class="notepad-page">
-        <button class="back-to-calculator nav-link" type="button" data-page="calculator">Kembali ke Kalkulator</button>
-        <h2>Kebijakan Refund/Pengembalian Dana</h2>
-        <p>Terakhir diperbarui: 13 Juni 2026</p>
-        <p><strong>Tidak ada refund untuk layanan yang sudah berhasil diproses.</strong> Kalkulator Premium adalah layanan digital hiburan. Setelah pembayaran berhasil dan hasil perhitungan tersedia, transaksi dianggap selesai dan tidak dapat dibatalkan.</p>
-        <p>Refund tidak diberikan untuk salah input rumus, salah angka, berubah pikiran, hasil yang tidak sesuai ekspektasi, atau karena pengguna baru sadar bahwa ini memang website meme.</p>
-        <p>Pengecualian hanya berlaku apabila terjadi pembayaran ganda untuk order yang sama atau pembayaran berhasil tetapi hasil sama sekali tidak dapat diakses karena gangguan sistem kami.</p>
-        <p>Permintaan pengecekan dapat dikirim ke support@cuancrab.online maksimal 3 hari kalender sejak transaksi, dengan menyertakan nomor order, bukti pembayaran, nominal, dan tanggal transaksi.</p>
-      </article>
-    </section>
-
-    <section class="content-shell page-section" data-page-section="faq" aria-label="FAQ">
-      <article class="notepad-page">
-        <button class="back-to-calculator nav-link" type="button" data-page="calculator">Kembali ke Kalkulator</button>
-        <h2>FAQ</h2>
-        <h3>Apa itu Kalkulator Premium?</h3>
-        <p>Kalkulator online berbayar untuk hiburan. Masukkan rumus, bayar, lalu hasil muncul.</p>
-        <h3>Apakah ini serius?</h3>
-        <p>Layanannya berjalan serius, konsepnya lucu-lucuan. Angka tetap angka, tapi vibes-nya meme.</p>
-        <h3>Apakah ada produk fisik?</h3>
-        <p>Tidak. Semua digital dan langsung tampil di website.</p>
-        <h3>Apakah bisa refund?</h3>
-        <p>Tidak, jika hasil sudah tersedia. Refund hanya dipertimbangkan untuk pembayaran ganda atau gangguan sistem yang membuat hasil tidak bisa diakses sama sekali.</p>
-        <h3>Kalau salah masukin rumus?</h3>
-        <p>Itu tanggung jawab pengguna. Mohon cek rumus sebelum bayar.</p>
-        <h3>Apakah pembayaran aman?</h3>
-        <p>Pembayaran diproses oleh payment gateway. Kami tidak menyimpan data sensitif seperti PIN, password bank, atau data kartu lengkap.</p>
-      </article>
-    </section>
-
-    <!-- Modal Sertifikat -->
     <div id="result-modal" class="modal hidden">
       <div class="modal-content">
         <h2 id="modal-title">Sertifikat Berhasil Dibuat</h2>
         <p id="modal-roast" class="roast-text"></p>
-        
         <div id="certificate-container" class="certificate-container">
           <canvas id="certificate-canvas" width="600" height="400"></canvas>
         </div>
-        
         <div class="modal-actions">
           <button id="download-cert-btn" class="btn primary">Unduh</button>
           <button id="share-ig-btn" class="btn instagram-btn">Share ke IG</button>
@@ -245,6 +171,7 @@
       </div>
     </div>
 
+    <script src="/common.js"></script>
     <script type="module" src="/app.js"></script>
   </body>
 </html>

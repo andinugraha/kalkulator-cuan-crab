@@ -7,87 +7,6 @@ const historyToggleBtn = document.querySelector('#history-toggle-btn');
 const historyPopover = document.querySelector('#history-popover');
 const degBtn = document.querySelector('.deg-btn');
 const radBtn = document.querySelector('.rad-btn');
-const themeToggleBtn = document.querySelector('#theme-toggle-btn');
-const siteHeader = document.querySelector('.site-header');
-const burgerBtn = document.querySelector('#burger-btn');
-const navLinks = document.querySelectorAll('.nav-link');
-const pageSections = document.querySelectorAll('[data-page-section]');
-
-const currentTheme = localStorage.getItem('scientific_calc_theme') || 'light';
-const isGoldUnlocked = localStorage.getItem('unlocked_gold') === '1';
-
-if (isGoldUnlocked) {
-  document.body.classList.add('gold-theme');
-} else if (currentTheme === 'dark') {
-  document.body.classList.add('dark-theme');
-}
-
-if (themeToggleBtn) {
-  themeToggleBtn.addEventListener('click', () => {
-    if (isGoldUnlocked) {
-      document.body.classList.toggle('gold-theme');
-      if (!document.body.classList.contains('gold-theme') && currentTheme === 'dark') {
-        document.body.classList.add('dark-theme');
-      } else {
-        document.body.classList.remove('dark-theme');
-      }
-    } else {
-      document.body.classList.toggle('dark-theme');
-      const isDark = document.body.classList.contains('dark-theme');
-      localStorage.setItem('scientific_calc_theme', isDark ? 'dark' : 'light');
-    }
-  });
-}
-
-if (burgerBtn && siteHeader) {
-  burgerBtn.addEventListener('click', (event) => {
-    event.stopPropagation();
-    const isOpen = siteHeader.classList.toggle('nav-open');
-    burgerBtn.setAttribute('aria-expanded', String(isOpen));
-  });
-
-  document.addEventListener('click', (event) => {
-    if (!siteHeader.contains(event.target)) {
-      siteHeader.classList.remove('nav-open');
-      burgerBtn.setAttribute('aria-expanded', 'false');
-    }
-  });
-}
-
-navLinks.forEach((link) => {
-  link.addEventListener('click', () => {
-    showPage(link.dataset.page || 'calculator');
-  });
-});
-
-function showPage(page) {
-  const pageExists = [...pageSections].some((section) => section.dataset.pageSection === page);
-  const nextPage = pageExists ? page : 'calculator';
-
-  pageSections.forEach((section) => {
-    section.classList.toggle('active', section.dataset.pageSection === nextPage);
-  });
-
-  navLinks.forEach((link) => {
-    link.classList.toggle('active', link.dataset.page === nextPage);
-  });
-
-  if (siteHeader && burgerBtn) {
-    siteHeader.classList.remove('nav-open');
-    burgerBtn.setAttribute('aria-expanded', 'false');
-  }
-
-  if (nextPage === 'calculator') {
-    history.replaceState(null, '', window.location.pathname);
-  } else {
-    history.replaceState(null, '', `#${nextPage}`);
-  }
-
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-showPage((window.location.hash || '#calculator').replace('#', ''));
-
 let expression = '';
 let busy = false;
 let snapLoading;
@@ -132,7 +51,10 @@ window.addEventListener('keydown', (event) => {
     appendValue(toDisplayOperator(event.key));
   }
   if (event.key === '^') appendValue('^');
-  if (event.key === 'Backspace') backspace();
+  if (event.key === 'Backspace' || event.key === 'Delete') {
+    event.preventDefault();
+    backspace();
+  }
   if (event.key === 'Escape') clearExpression();
   if (event.key === 'Enter') payForResult();
 });
@@ -506,9 +428,14 @@ async function markClientPaid(orderId) {
   }
 }
 
+function clearStatusActions() {
+  statusEl.querySelectorAll('.recheck-btn, .simulate-btn').forEach((btn) => btn.remove());
+}
+
 function showRecheckButton(orderId, oldExpression) {
+  clearStatusActions();
   statusEl.innerHTML = 'Pembayaran diproses. ';
-  
+
   const btn = document.createElement('button');
   btn.className = 'recheck-btn';
   btn.textContent = 'Cek Status';
@@ -531,6 +458,7 @@ function showRecheckButton(orderId, oldExpression) {
 }
 
 function showSimulateButton(orderId) {
+  clearStatusActions();
   const btn = document.createElement('button');
   btn.className = 'simulate-btn';
   btn.textContent = 'Simulasi Sukses (Test)';

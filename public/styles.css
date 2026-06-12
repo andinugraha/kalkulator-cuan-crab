@@ -143,6 +143,9 @@ body {
   font-size: 15px;
   text-align: left;
   flex: 1;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
 }
 
 .site-nav {
@@ -175,6 +178,8 @@ body {
   font-weight: 600;
   padding: 10px 12px;
   text-align: left;
+  text-decoration: none;
+  display: block;
 }
 
 .nav-link:hover,
@@ -182,14 +187,6 @@ body {
   border-color: var(--bg-btn-equals);
   background: var(--bg-btn-scientific);
   color: var(--text-btn-active);
-}
-
-.page-section {
-  display: none;
-}
-
-.page-section.active {
-  display: flex;
 }
 
 .shell {
@@ -203,6 +200,7 @@ body {
 .content-shell {
   width: 100%;
   max-width: 760px;
+  display: flex;
   justify-content: center;
 }
 
@@ -226,17 +224,54 @@ body {
   background: #edf2fa;
 }
 
-.notepad-page h2 {
+.notepad-page h1 {
   color: #12356f;
   font-size: 30px;
   line-height: 1.2;
   margin-bottom: 18px;
 }
 
+.notepad-page h2 {
+  color: #202124;
+  font-size: 18px;
+  margin: 24px 0 8px;
+}
+
 .notepad-page h3 {
   color: #202124;
   font-size: 18px;
   margin: 24px 0 8px;
+}
+
+.notepad-page a {
+  color: #1a73e8;
+  text-decoration: underline;
+}
+
+.site-footer {
+  width: min(760px, calc(100vw - 32px));
+  margin-top: 24px;
+  padding: 16px 8px 8px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.site-footer a {
+  color: var(--text-btn-active);
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  text-decoration: underline;
+}
+
+.footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
 }
 
 .notepad-page p,
@@ -674,7 +709,7 @@ body {
     padding: 26px 20px;
   }
 
-  .notepad-page h2 {
+  .notepad-page h1 {
     font-size: 24px;
   }
   

@@ -4,6 +4,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import midtransClient from 'midtrans-client';
 import { evaluateExpression } from './src/utils/calculator.js';
+import { getContentPage } from './src/pages/content.js';
+import { getSitemapXml } from './src/templates/html.js';
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -30,11 +32,26 @@ const coreApi = new midtransClient.CoreApi({
 const orders = {};
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+
+const contentRoutes = ['produk', 'tentang', 'kontak', 'privasi', 'syarat', 'refund', 'faq'];
+
+contentRoutes.forEach((slug) => {
+  app.get(`/${slug}`, (_req, res) => {
+    const html = getContentPage(slug);
+    if (!html) return res.status(404).send('Halaman tidak ditemukan.');
+    res.type('html').send(html);
+  });
+});
+
+app.get('/sitemap.xml', (_req, res) => {
+  res.type('application/xml').send(getSitemapXml());
+});
 
 app.get('/', (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/config.js', (_req, res) => {
   res.type('application/javascript').send(`
@@ -52,11 +69,14 @@ window.APP_CONFIG = {
 function calculatePrice(expression) {
   let price = 1000;
   
-  const funcs = ['sin', 'cos', 'tan', 'log', 'ln', 'asin', 'acos', 'atan', 'sqrt', '√'];
-  funcs.forEach(f => {
-    const matches = expression.match(new RegExp(f.replace('√', '\\√'), 'g'));
+  const funcs = ['sin', 'cos', 'tan', 'log', 'ln', 'asin', 'acos', 'atan', 'sqrt'];
+  funcs.forEach((f) => {
+    const matches = expression.match(new RegExp(f, 'g'));
     if (matches) price += matches.length * 2000;
   });
+
+  const sqrtMatches = expression.match(/√/g);
+  if (sqrtMatches) price += sqrtMatches.length * 2000;
 
   const ops = ['\\+', '\\-', '\\*', '\\/', '\\^', '%'];
   ops.forEach(op => {
