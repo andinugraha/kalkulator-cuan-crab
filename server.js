@@ -4,7 +4,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import midtransClient from 'midtrans-client';
-import { evaluateExpression } from './src/calculator.js';
+import { evaluateExpression } from './public/calculator.js';
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -59,17 +59,18 @@ app.post('/api/calculate', async (req, res) => {
     }
 
     const expression = String(req.body?.expression || '').trim();
+    const mode = String(req.body?.mode || 'deg').trim();
     if (!expression) {
       return res.status(400).json({ error: 'Masukkan perhitungan terlebih dahulu.' });
     }
 
-    const result = evaluateExpression(expression);
+    const result = evaluateExpression(expression, mode);
     
-    // Kriptografi: Buat signature agar orderId hanya valid untuk ekspresi ini saja
+    // Kriptografi: Buat signature agar orderId hanya valid untuk ekspresi dan mode ini saja
     const salt = crypto.randomBytes(4).toString('hex'); // 8 karakter heksadesimal
     const secret = process.env.MIDTRANS_SERVER_KEY || 'default_secret';
     const hash = crypto.createHmac('sha256', secret)
-      .update(`${expression}:${salt}`)
+      .update(`${expression}:${mode}:${salt}`)
       .digest('hex')
       .slice(0, 16); // 16 karakter hash
 
@@ -77,6 +78,7 @@ app.post('/api/calculate', async (req, res) => {
 
     orders.set(orderId, {
       expression,
+      mode,
       result,
       paid: false,
       createdAt: Date.now()
@@ -147,12 +149,13 @@ app.post('/api/confirm-client', (req, res) => {
 app.get('/api/result/:orderId', async (req, res) => {
   const { orderId } = req.params;
   const expression = String(req.query.expression || '').trim();
+  const mode = String(req.query.mode || 'deg').trim();
 
   if (!expression) {
     return res.status(400).json({ error: 'Parameter expression wajib disertakan.' });
   }
 
-  // 1. Validasi keaslian orderId terhadap expression
+  // 1. Validasi keaslian orderId terhadap expression dan mode
   const parts = orderId.split('-');
   if (parts.length !== 3 || parts[0] !== 'C') {
     return res.status(400).json({ error: 'Order ID tidak valid.' });
@@ -162,7 +165,7 @@ app.get('/api/result/:orderId', async (req, res) => {
   const expectedHash = parts[2];
   const secret = process.env.MIDTRANS_SERVER_KEY || 'default_secret';
   const hash = crypto.createHmac('sha256', secret)
-    .update(`${expression}:${salt}`)
+    .update(`${expression}:${mode}:${salt}`)
     .digest('hex')
     .slice(0, 16);
 
@@ -185,7 +188,7 @@ app.get('/api/result/:orderId', async (req, res) => {
     const statusResponse = await coreApi.transaction.status(orderId);
     
     if (isPaidStatus(statusResponse.transaction_status, statusResponse.fraud_status)) {
-      const result = evaluateExpression(expression);
+      const result = evaluateExpression(expression, mode);
       
       // Update memori lokal jika orderId ada di Map (opsional)
       if (localOrder) {

@@ -1,229 +1,398 @@
 :root {
-  color-scheme: light;
-  --bg: #f7f8fa;
-  --panel: #ffffff;
-  --text: #15171a;
-  --muted: #6f7782;
-  --line: #dde2e8;
-  --key: #f4f6f8;
-  --key-hover: #e9edf2;
-  --accent: #1d74f5;
-  --accent-hover: #0f63df;
-  --accent-soft: #eaf2ff;
-  --danger: #c0392b;
-  --shadow: 0 18px 55px rgba(20, 28, 40, 0.11);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --bg-page: #ffffff;
+  --text-primary: #202124;
+  --text-secondary: #70757a;
+  --text-btn-scientific: #3c4043;
+  --text-btn-active: #1a73e8;
+  
+  /* Palette Warna Google Calculator */
+  --bg-btn-number: #f1f3f4;
+  --bg-btn-number-hover: #e8eaed;
+  --bg-btn-scientific: #edf2fa;
+  --bg-btn-scientific-hover: #e2ebf9;
+  --bg-btn-equals: #1a73e8;
+  --bg-btn-equals-hover: #1557b0;
+  
+  --border-color: #dadce0;
+  --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  margin: 0;
+  font-family: var(--font-family);
+  background-color: var(--bg-page);
+  color: var(--text-primary);
   min-height: 100vh;
-  background: var(--bg);
-  color: var(--text);
-}
-
-button {
-  font: inherit;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
 }
 
 .shell {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
+  width: 100%;
+  max-width: 650px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.calculator-wrapper {
+  width: 100%;
 }
 
 .calculator {
-  width: min(100%, 380px);
-  background: var(--panel);
-  border: 1px solid var(--line);
+  width: 100%;
+  background-color: #ffffff;
   border-radius: 8px;
-  box-shadow: var(--shadow);
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
+/* DISPLAY STYLE */
 .display {
-  min-height: 128px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px 16px;
+  min-height: 104px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  gap: 10px;
-  padding: 26px 24px 20px;
-  border-bottom: 1px solid var(--line);
+  position: relative;
+  background-color: #ffffff;
+  margin-bottom: 16px;
+}
+
+.history-toggle-btn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.1s, color 0.1s;
+}
+
+.history-toggle-btn:hover {
+  background-color: #f1f3f4;
+  color: var(--text-primary);
+}
+
+.display-text-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding-top: 12px;
 }
 
 .expression {
-  width: 100%;
-  min-height: 48px;
-  overflow: hidden;
+  font-size: 13px;
+  color: var(--text-secondary);
+  min-height: 16px;
   text-align: right;
-  font-size: clamp(32px, 10vw, 46px);
-  line-height: 1.1;
-  font-weight: 650;
-  letter-spacing: 0;
   word-break: break-all;
+  white-space: nowrap;
+  overflow-x: auto;
+  max-width: 100%;
 }
 
 .status {
-  min-height: 20px;
+  font-size: 30px;
+  color: var(--text-primary);
+  min-height: 36px;
   text-align: right;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.35;
+  word-break: break-all;
+  margin-top: 4px;
+  font-weight: 400;
+  line-height: 1.2;
 }
 
 .status.error {
-  color: var(--danger);
+  color: #c0392b;
+  font-size: 14px;
+  font-weight: 500;
 }
 
-.keys {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  background: var(--line);
-}
-
-.key {
-  min-width: 0;
-  aspect-ratio: 1 / 0.78;
-  border: 0;
-  background: var(--key);
-  color: var(--text);
-  cursor: pointer;
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: 0;
-  transition: background 140ms ease, color 140ms ease;
-}
-
-.key:hover {
-  background: var(--key-hover);
-}
-
-.key:focus-visible {
-  outline: 3px solid var(--accent-soft);
-  outline-offset: -3px;
-}
-
-.utility {
-  color: var(--muted);
-  background: #fbfcfd;
-}
-
-.operator {
-  color: var(--accent);
-  background: #f8fbff;
-}
-
-.equals {
-  background: var(--accent);
-  color: #ffffff;
-}
-
-.equals:hover {
-  background: var(--accent-hover);
-}
-
-.key:disabled {
-  cursor: wait;
-  opacity: 0.62;
-}
-
-@media (max-width: 420px) {
-  .shell {
-    padding: 12px;
-  }
-
-  .calculator {
-    width: 100%;
-  }
-
-  .display {
-    min-height: 118px;
-    padding: 22px 18px 18px;
-  }
-
-  .key {
-    aspect-ratio: 1 / 0.86;
-  }
-}
-
-/* --- Bagian Riwayat Perhitungan --- */
-.history-panel {
-  width: 100%;
-  background: var(--panel);
-  border: 1px solid var(--line);
+/* FLOATING HISTORY POPOVER */
+.history-popover {
+  position: absolute;
+  top: 48px;
+  left: 10px;
+  width: calc(100% - 20px);
+  background-color: #ffffff;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  box-shadow: var(--shadow);
-  padding: 16px;
-  margin-top: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  z-index: 50;
+  padding: 12px;
+  max-height: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
-.history-header {
+.history-popover.hidden {
+  display: none;
+}
+
+.history-popover-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.85rem;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--muted);
-  border-bottom: 1px solid var(--line);
-  padding-bottom: 8px;
-  margin-bottom: 10px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid #f1f3f4;
+  padding-bottom: 6px;
 }
 
 .clear-history-btn {
   background: transparent;
   border: none;
-  color: var(--danger);
+  color: #d93025;
+  font-size: 11px;
+  font-weight: 500;
   cursor: pointer;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 2px 6px;
+  padding: 4px 8px;
   border-radius: 4px;
-  transition: background 140ms ease;
+  transition: background-color 0.1s;
 }
 
 .clear-history-btn:hover {
-  background: #fef2f2;
+  background-color: #fce8e6;
 }
 
 .history-list {
   list-style: none;
-  padding: 0;
-  margin: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-height: 180px;
-  overflow-y: auto;
+  gap: 6px;
 }
 
 .history-item {
-  font-size: 0.85rem;
+  font-size: 12px;
+  color: var(--text-btn-scientific);
   padding: 8px 10px;
-  background: var(--key);
+  background-color: #f8f9fa;
   border-radius: 6px;
   cursor: pointer;
-  transition: background 140ms ease, transform 100ms ease;
+  transition: background-color 0.1s;
   word-break: break-all;
-  border: 1px solid transparent;
-  font-weight: 500;
 }
 
 .history-item:hover {
-  background: var(--key-hover);
-  border-color: var(--line);
-  transform: translateY(-1px);
+  background-color: #f1f3f4;
 }
 
 .empty-history {
-  font-size: 0.8rem;
-  color: var(--muted);
+  font-size: 12px;
+  color: var(--text-secondary);
   text-align: center;
-  padding: 12px 0;
+  padding: 16px 0;
   font-style: italic;
+}
+
+/* KEYS CONTAINER AND RESPONSIVE GRIDS */
+.keys {
+  display: flex;
+  gap: 8px;
+}
+
+.keys-scientific {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  flex: 3;
+}
+
+.keys-standard {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  flex: 4;
+}
+
+.key {
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1.6 / 1;
+  transition: background-color 0.1s, border-color 0.1s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.key:focus-visible {
+  outline: 2px solid var(--text-btn-active);
+  outline-offset: 1px;
+}
+
+/* Scientific Keys Style */
+.scientific {
+  background-color: var(--bg-btn-scientific);
+  color: var(--text-btn-scientific);
+  border-radius: 24px;
+}
+
+.scientific:hover {
+  background-color: var(--bg-btn-scientific-hover);
+}
+
+/* Deg & Rad button custom capsule group styling */
+.deg-btn {
+  border-radius: 24px 0 0 24px;
+  border-right: 1px solid rgba(0,0,0,0.06);
+}
+
+.rad-btn {
+  border-radius: 0 24px 24px 0;
+}
+
+.deg-btn.active, .rad-btn.active {
+  color: var(--text-btn-active);
+  font-weight: 700;
+}
+
+/* Numbers Style */
+.number {
+  background-color: var(--bg-btn-number);
+  color: var(--text-primary);
+  border-radius: 24px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.number:hover {
+  background-color: var(--bg-btn-number-hover);
+}
+
+/* Utility Style (AC) */
+.utility {
+  background-color: var(--bg-btn-scientific);
+  color: var(--text-btn-scientific);
+  border-radius: 24px;
+}
+
+.utility:hover {
+  background-color: var(--bg-btn-scientific-hover);
+}
+
+/* Operator Style */
+.operator {
+  background-color: var(--bg-btn-scientific);
+  color: var(--text-btn-scientific);
+  border-radius: 24px;
+}
+
+.operator:hover {
+  background-color: var(--bg-btn-scientific-hover);
+}
+
+/* Equals Button Style */
+.equals {
+  background-color: var(--bg-btn-equals);
+  color: #ffffff;
+  border-radius: 24px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.equals:hover {
+  background-color: var(--bg-btn-equals-hover);
+}
+
+.key:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+/* RESPONSIVE DESIGN (Mobile Friendly - Scientific stacked above Standard) */
+@media (max-width: 600px) {
+  body {
+    padding: 8px;
+  }
+  
+  .keys {
+    flex-direction: column; /* Tombol Ilmiah bertumpuk di atas Tombol Standar */
+    gap: 8px;
+  }
+
+  .keys-scientific {
+    grid-template-columns: repeat(5, 1fr); /* 5 kolom di mobile agar pas 15 tombol */
+    gap: 6px;
+  }
+
+  .keys-standard {
+    grid-template-columns: repeat(4, 1fr); /* Tetap 4 kolom di mobile */
+    gap: 6px;
+  }
+
+  .key {
+    font-size: 12px;
+    aspect-ratio: 1.45 / 1; /* Sedikit lebih tinggi agar mudah disentuh */
+  }
+
+  /* Hilangkan modifikasi sudut Deg/Rad khusus desktop di mobile karena posisinya bergeser */
+  .deg-btn {
+    border-radius: 24px;
+    border-right: 1px solid transparent;
+  }
+  
+  .rad-btn {
+    border-radius: 24px;
+  }
+
+  .number, .equals {
+    font-size: 14px;
+  }
+
+  .display {
+    min-height: 88px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+
+  .status {
+    font-size: 24px;
+    min-height: 28px;
+  }
+
+  .expression {
+    font-size: 12px;
+  }
+
+  .history-popover {
+    max-height: 200px;
+  }
+}
+
+@media (max-width: 380px) {
+  .key {
+    font-size: 11px;
+    aspect-ratio: 1.35 / 1;
+  }
+
+  .number, .equals {
+    font-size: 13px;
+  }
 }
