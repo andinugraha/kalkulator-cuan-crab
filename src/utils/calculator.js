@@ -296,5 +296,70 @@ function applyTopOperator(values, ops, mode) {
 
 function formatResult(value) {
   const rounded = Number(value.toPrecision(12));
+  if (Number.isNaN(rounded) || !Number.isFinite(rounded)) {
+    throw new Error('Hasil perhitungan tidak terdefinisi (Infinity/NaN).');
+  }
   return Number.isInteger(rounded) ? String(rounded) : String(rounded);
+}
+
+// Harga Dinamis (Selalu acak, unik, konsisten berbasis rumus, ganjil/genap, maksimal Rp 10.000)
+export function calculatePrice(expression) {
+  if (!expression) return 1000;
+
+  // Hashing ASCII sederhana untuk menghasilkan seed angka acak yang unik & konsisten bagi rumus yang sama
+  let hash = 0;
+  const cleanExpr = String(expression).replace(/\s/g, '');
+  for (let i = 0; i < cleanExpr.length; i++) {
+    hash = cleanExpr.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  hash = Math.abs(hash);
+
+  // Batas harga acak maksimal Rp 10.000 (modulo 9001 untuk rentang Rp 1.000 s.d. Rp 10.000)
+  // Menghasilkan angka bervariasi ganjil/genap secara alami (tidak berupa kelipatan bulat yang terprediksi)
+  let price = 1000 + (hash % 9001);
+
+  // Tambahkan sedikit variasi non-linier berdasarkan fungsi ilmiah dalam ekspresi
+  const funcs = ['sin', 'cos', 'tan', 'log', 'ln', 'asin', 'acos', 'atan', 'sqrt', '√'];
+  funcs.forEach((f) => {
+    const matches = cleanExpr.match(new RegExp(f === '√' ? '√' : f, 'g'));
+    if (matches) price += matches.length * 150;
+  });
+
+  // Pastikan harga akhir selalu aman, acak, dan tetap dibatasi ketat maksimal Rp 10.000
+  if (price > 10000) {
+    price = 1000 + (price % 9001);
+  }
+
+  return price;
+}
+
+// Roast (Ejekan)
+export function generateRoast(expression, price) {
+  if (expression.replace(/\s/g, '') === '1+1') return '1+1=2. Anak TK juga tau! Sayang banget uangnya.';
+  if (price > 10000) return `Buset, bayar Rp ${price.toLocaleString('id-ID')} buat rumus keriting ginian? Fix lo lagi ujian tapi males mikir.`;
+  if (price === 1000) return `Rp 1.000 buat ngitung sepele gini? Emang hape lo ga ada aplikasi kalkulator gratisan?`;
+  return `Uang Rp ${price.toLocaleString('id-ID')} melayang demi kepastian matematika. Definisi sultan gabut sejati.`;
+}
+
+// Spoiler / Hint Hasil
+export function generateSpoiler(result) {
+  const resStr = String(result);
+  if (resStr.includes('e') || resStr.includes('E')) {
+    return "Hasilnya adalah notasi ilmiah.";
+  }
+  const isNegative = resStr.startsWith('-');
+  const isDecimal = resStr.includes('.');
+  const length = resStr.replace(/[-.]/g, '').length;
+  
+  let hints = [];
+  hints.push(isNegative ? "Bilangan negatif" : "Bilangan positif");
+  hints.push(isDecimal ? "memiliki nilai desimal" : "bulat");
+  hints.push(`dengan ${length} digit angka`);
+  
+  if (!isDecimal) {
+    const num = parseInt(resStr, 10);
+    if (!isNaN(num)) hints.push(num % 2 === 0 ? "genap" : "ganjil");
+  }
+
+  return hints.join(", ") + ".";
 }

@@ -3,7 +3,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import midtransClient from 'midtrans-client';
-import { evaluateExpression } from './src/utils/calculator.js';
+import { evaluateExpression, calculatePrice, generateRoast, generateSpoiler } from './src/utils/calculator.js';
 import { getContentPage } from './src/pages/content.js';
 import { getSitemapXml } from './src/templates/html.js';
 
@@ -51,7 +51,12 @@ app.get('/', (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.use(express.static(path.join(__dirname, 'public')));
+// Sajikan file statis dengan optimasi performa caching (Express Static Caching)
+app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: '1d', // Cache aset selama 1 hari untuk mendongkrak performa Lighthouse
+  etag: true,
+  lastModified: true
+}));
 
 app.get('/config.js', (_req, res) => {
   res.type('application/javascript').send(`
@@ -65,57 +70,7 @@ window.APP_CONFIG = {
 };`);
 });
 
-// Harga Dinamis
-function calculatePrice(expression) {
-  let price = 1000;
-  
-  const funcs = ['sin', 'cos', 'tan', 'log', 'ln', 'asin', 'acos', 'atan', 'sqrt'];
-  funcs.forEach((f) => {
-    const matches = expression.match(new RegExp(f, 'g'));
-    if (matches) price += matches.length * 2000;
-  });
-
-  const sqrtMatches = expression.match(/√/g);
-  if (sqrtMatches) price += sqrtMatches.length * 2000;
-
-  const ops = ['\\+', '\\-', '\\*', '\\/', '\\^', '%'];
-  ops.forEach(op => {
-    const matches = expression.match(new RegExp(op, 'g'));
-    if (matches) price += matches.length * 500;
-  });
-
-  return Math.min(price, 100000); // Max 100k
-}
-
-// Roast
-function generateRoast(expression, price) {
-  if (expression.replace(/\s/g, '') === '1+1') return '1+1=2. Anak TK juga tau! Sayang banget uangnya.';
-  if (price > 10000) return `Buset, bayar Rp ${price.toLocaleString('id-ID')} buat rumus keriting ginian? Fix lo lagi ujian tapi males mikir.`;
-  if (price === 1000) return `Rp 1.000 buat ngitung sepele gini? Emang hape lo ga ada aplikasi kalkulator gratisan?`;
-  return `Uang Rp ${price.toLocaleString('id-ID')} melayang demi kepastian matematika. Definisi sultan gabut sejati.`;
-}
-
-function generateSpoiler(result) {
-  const resStr = String(result);
-  if (resStr.includes('e') || resStr.includes('E')) {
-    return "Hasilnya adalah notasi ilmiah.";
-  }
-  const isNegative = resStr.startsWith('-');
-  const isDecimal = resStr.includes('.');
-  const length = resStr.replace(/[-.]/g, '').length;
-  
-  let hints = [];
-  hints.push(isNegative ? "Bilangan negatif" : "Bilangan positif");
-  hints.push(isDecimal ? "memiliki nilai desimal" : "bulat");
-  hints.push(`dengan ${length} digit angka`);
-  
-  if (!isDecimal) {
-    const num = parseInt(resStr, 10);
-    if (!isNaN(num)) hints.push(num % 2 === 0 ? "genap" : "ganjil");
-  }
-
-  return hints.join(", ") + ".";
-}
+// Logika penentuan harga, roast, dan spoiler telah dipindahkan ke modul src/utils/calculator.js
 
 app.post('/api/calculate', async (req, res) => {
   try {
@@ -123,6 +78,11 @@ app.post('/api/calculate', async (req, res) => {
     const mode = String(req.body?.mode || 'deg').trim();
     if (!expression) {
       return res.status(400).json({ error: 'Masukkan perhitungan terlebih dahulu.' });
+    }
+
+    // Keamanan: Batasi panjang input rumus
+    if (expression.length > 200) {
+      return res.status(400).json({ error: 'Rumus terlalu panjang. Maksimal 200 karakter.' });
     }
 
     if (missingEnv.length > 0) {
@@ -137,12 +97,19 @@ app.post('/api/calculate', async (req, res) => {
 
     const transaction = await snap.createTransaction({
       transaction_details: { order_id: orderId, gross_amount: price },
-      item_details: [{ id: 'calc', price, quantity: 1, name: 'Hasil Kalkulator' }]
+      item_details: [{ id: 'calc', price, quantity: 1, name: 'Hasil Kalkulator' }],
+      metadata: {
+        expression,
+        mode,
+        price: String(price),
+        isJackpot: String(isJackpot)
+      }
     });
 
     res.json({ orderId, token: transaction.token, redirectUrl: transaction.redirect_url });
   } catch (error) {
-    res.status(400).json({ error: error.message || 'Perhitungan gagal.' });
+    console.error('Error in /api/calculate:', error);
+    res.status(400).json({ error: 'Perhitungan gagal diproses.' });
   }
 });
 
@@ -153,6 +120,11 @@ app.post('/api/spoiler', (req, res) => {
     
     if (!expression) {
       return res.json({ spoiler: '', price: 0 });
+    }
+
+    // Keamanan: Batasi panjang input rumus
+    if (expression.length > 200) {
+      return res.json({ spoiler: 'Rumus terlalu panjang.', price: 0 });
     }
     
     const openCount = (expression.match(/\(/g) || []).length;
@@ -179,23 +151,25 @@ app.post('/api/midtrans/notification', async (req, res) => {
     const transactionStatus = notification.transaction_status;
     const fraudStatus = notification.fraud_status;
 
-    if (transactionStatus == 'capture' || transactionStatus == 'settlement') {
+    if (transactionStatus === 'capture' || transactionStatus === 'settlement') {
       if (orders[orderId]) orders[orderId].status = 'settlement';
-    } else if (transactionStatus == 'cancel' || transactionStatus == 'deny' || transactionStatus == 'expire') {
+    } else if (transactionStatus === 'cancel' || transactionStatus === 'deny' || transactionStatus === 'expire') {
       if (orders[orderId]) orders[orderId].status = 'cancel';
     }
 
     res.json({ ok: true });
   } catch (error) {
-    res.status(400).json({ error: error.message || 'Notifikasi tidak valid.' });
+    console.error('Error in /api/midtrans/notification:', error);
+    res.status(400).json({ error: 'Notifikasi tidak valid.' });
   }
 });
 
 app.post('/api/confirm-client', (req, res) => {
   if (!clientConfirmEnabled) return res.status(403).json({ error: 'Disabled' });
-  const { orderId } = req.body;
+  const { orderId, expression } = req.body;
+  const expr = String(expression || '').trim();
   if (!orders[orderId]) {
-    orders[orderId] = { status: 'settlement', expression: '', mode: 'deg', price: 1000, isJackpot: false };
+    orders[orderId] = { status: 'settlement', expression: expr, mode: 'deg', price: calculatePrice(expr), isJackpot: false };
   } else {
     orders[orderId].status = 'settlement';
   }
@@ -204,41 +178,54 @@ app.post('/api/confirm-client', (req, res) => {
 
 app.get('/api/result/:orderId', async (req, res) => {
   const { orderId } = req.params;
-  const expression = String(req.query.expression || '').trim();
-  const mode = String(req.query.mode || 'deg').trim();
 
-  // Try local first for instant feedback if webhook or client-confirm passed
+  // Cek memori lokal terlebih dahulu untuk feedback instan jika webhook/client-confirm telah berhasil
   const localOrder = orders[orderId];
   if (localOrder && localOrder.status === 'settlement') {
-    const result = evaluateExpression(expression, mode);
-    return res.json({
-      result,
-      price: localOrder.price,
-      isJackpot: localOrder.isJackpot,
-      roast: generateRoast(expression, localOrder.price)
-    });
+    try {
+      const result = evaluateExpression(localOrder.expression, localOrder.mode);
+      return res.json({
+        result,
+        price: localOrder.price,
+        isJackpot: localOrder.isJackpot,
+        roast: generateRoast(localOrder.expression, localOrder.price)
+      });
+    } catch (err) {
+      return res.status(400).json({ error: 'Perhitungan gagal dievaluasi.' });
+    }
   }
 
-  // Fallback to Midtrans status API
+  // Fallback stateless: ambil data status langsung dari API Midtrans dan rekonsiliasi data dari metadata
   try {
     const statusResponse = await coreApi.transaction.status(orderId);
     if (isPaidStatus(statusResponse.transaction_status, statusResponse.fraud_status)) {
-      if (localOrder) localOrder.status = 'settlement';
-      
-      const price = localOrder ? localOrder.price : 1000;
-      const isJackpot = localOrder ? localOrder.isJackpot : false;
-      const result = evaluateExpression(expression, mode);
-      
+      // Ambil metadata yang tersemat pada transaksi Midtrans
+      const metadata = statusResponse.metadata || {};
+      const expr = metadata.expression || String(req.query.expression || '').trim();
+      const mode = metadata.mode || String(req.query.mode || 'deg').trim();
+      // Gunakan calculatePrice(expr) sebagai fallback utama daripada 1000 flat agar harga acak tetap konsisten
+      const price = metadata.price ? Number(metadata.price) : calculatePrice(expr);
+      const isJackpot = metadata.isJackpot === 'true' || metadata.isJackpot === true;
+
+      // Sinkronkan ke memori lokal jika instans ini masih hidup
+      if (localOrder) {
+        localOrder.status = 'settlement';
+      } else {
+        orders[orderId] = { status: 'settlement', expression: expr, mode, price, isJackpot };
+      }
+
+      const result = evaluateExpression(expr, mode);
       return res.json({
         result,
         price,
         isJackpot,
-        roast: generateRoast(expression, price)
+        roast: generateRoast(expr, price)
       });
     } else {
       return res.status(402).json({ error: 'Pembayaran belum diselesaikan.' });
     }
   } catch (error) {
+    console.error('Error in /api/result/:orderId:', error);
     return res.status(402).json({ error: 'Pembayaran belum diselesaikan atau tidak terdaftar.' });
   }
 });

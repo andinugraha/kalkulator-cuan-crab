@@ -1,5 +1,4 @@
 const siteHeader = document.querySelector('.site-header');
-const burgerBtn = document.querySelector('#burger-btn');
 const themeToggleBtn = document.querySelector('#theme-toggle-btn');
 
 function getThemePreference() {
@@ -37,17 +36,4 @@ if (themeToggleBtn) {
   });
 }
 
-if (burgerBtn && siteHeader) {
-  burgerBtn.addEventListener('click', (event) => {
-    event.stopPropagation();
-    const isOpen = siteHeader.classList.toggle('nav-open');
-    burgerBtn.setAttribute('aria-expanded', String(isOpen));
-  });
-
-  document.addEventListener('click', (event) => {
-    if (!siteHeader.contains(event.target)) {
-      siteHeader.classList.remove('nav-open');
-      burgerBtn.setAttribute('aria-expanded', 'false');
-    }
-  });
-}
+// Tombol burger telah dihapus dari antarmuka pengguna

@@ -14,6 +14,12 @@ let lastAnswer = '';
 let angleMode = 'deg'; // default mode derajat
 let spoilerTimer;
 
+// Atur Canonical URL secara dinamis berdasarkan origin aktif untuk mengoptimalkan SEO
+const canonicalEl = document.querySelector('link[rel="canonical"]');
+if (canonicalEl) {
+  canonicalEl.setAttribute('href', window.location.origin + window.location.pathname);
+}
+
 // --- Inisialisasi & Pengelolaan Riwayat (History) ---
 let searchHistory = [];
 try {
@@ -614,14 +620,36 @@ function drawCertificate(name, expression, result, price) {
   ctx.font = '400 31px Arial, sans-serif';
   ctx.fillText('Dengan bangga dipersembahkan kepada:', 540, 560);
 
+  // Implementasi Nama & Peran Acak Meme yang Lucu, Menarik, dan Konsisten Berdasarkan Rumus (Maksimal 2 Kata)
+  const randomNames = [
+    "Sultan Depok", "Sultan Gabut", "Albert Einstein", "Kalkulator Lover", 
+    "Warga Kreatif", "Sultan Kemayoran", "Pecinta Angka", 
+    "Matematikawan Gaib", "Pemuja AC", "Hamba Allah", "Sultan Citayam",
+    "Pakar Aljabar", "Dewa Hitung", "Jagoan Neon"
+  ];
+  const randomRoles = [
+    "HASIL PREMIUM", "SULTAN GABUT", "DONATUR MEME", 
+    "PAHLAWAN RUMUS", "PENYELAMAT MATEMATIKA", "DUTA GEOMETRIS",
+    "SULTAN ANGKA", "SPONSOR RESMI", "GABUT SEJATI"
+  ];
+
+  let nameHash = 0;
+  const cleanExpr = String(expression || '').replace(/\s/g, '');
+  for (let i = 0; i < cleanExpr.length; i++) {
+    nameHash += cleanExpr.charCodeAt(i);
+  }
+  
+  const finalName = name === 'Pengguna Kalkulator' ? randomNames[nameHash % randomNames.length] : name;
+  const finalRole = randomRoles[nameHash % randomRoles.length];
+
   ctx.fillStyle = cyan;
-  fitCenteredText(ctx, name.toUpperCase(), 540, 710, 780, 92, 48, 'Arial, sans-serif', 800);
+  fitCenteredText(ctx, finalName.toUpperCase(), 540, 710, 780, 92, 48, 'Arial, sans-serif', 800);
 
   ctx.fillStyle = ink;
   ctx.font = '400 32px Arial, sans-serif';
   ctx.fillText('sebagai', 540, 795);
 
-  drawBadge(ctx, 540, 875, 'PEMBUKA HASIL');
+  drawBadge(ctx, 540, 875, finalRole);
 
   ctx.fillStyle = ink;
   ctx.font = '400 31px Arial, sans-serif';
@@ -639,11 +667,11 @@ function drawCertificate(name, expression, result, price) {
   ctx.fillText('Hasil perhitungan', 540, 1240);
 
   ctx.fillStyle = blue;
-  fitCenteredText(ctx, String(result), 540, 1362, 760, 116, 48, 'Courier New, monospace', 800);
+  fitCenteredText(ctx, String(result), 540, 1362, 760, 160, 60, 'Courier New, monospace', 800);
 
-  drawMedal(ctx, 540, 1550, gold, navy);
-  drawSignatureLine(ctx, 245, 1698, 'Kalkulator Premium');
-  drawSignatureLine(ctx, 835, 1698, 'Sistem Pembayaran');
+  drawMedal(ctx, 280, 1630, gold, navy);
+  drawSignatureLine(ctx, 800, 1698, 'Owner Website');
+  drawSignatureImage(ctx, 800, 1635);
 
   ctx.fillStyle = '#8b95a3';
   ctx.font = '600 26px Arial, sans-serif';
@@ -763,6 +791,60 @@ function drawMedal(ctx, x, y, gold, navy) {
   ctx.font = '700 42px Arial, sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText('OK', x, y + 15);
+  ctx.restore();
+}
+
+function drawSignatureImage(ctx, x, y) {
+  ctx.save();
+  ctx.strokeStyle = '#0f172a'; // Slate 900, elegant ink color
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  ctx.beginPath();
+  
+  // Tall 'A'
+  // Start with the loop on the left:
+  ctx.moveTo(x - 110, y + 25);
+  ctx.bezierCurveTo(x - 150, y - 10, x - 120, y - 50, x - 100, y - 30);
+  ctx.bezierCurveTo(x - 80, y - 10, x - 100, y + 30, x - 80, y - 120);
+  // Main high peak of A:
+  ctx.quadraticCurveTo(x - 70, y - 160, x - 65, y - 150);
+  ctx.lineTo(x - 50, y + 45); // Down stroke of A
+  
+  // Up stroke of A/connect to m
+  ctx.moveTo(x - 55, y - 10);
+  ctx.quadraticCurveTo(x - 45, y - 50, x - 35, y - 15);
+  
+  // m (loops)
+  ctx.quadraticCurveTo(x - 30, y - 45, x - 22, y - 15);
+  ctx.quadraticCurveTo(x - 17, y - 45, x - 10, y - 15);
+  ctx.quadraticCurveTo(x - 5, y - 45, x + 3, y - 15);
+  
+  // second m
+  ctx.quadraticCurveTo(x + 8, y - 45, x + 15, y - 15);
+  ctx.quadraticCurveTo(x + 20, y - 45, x + 28, y - 15);
+  ctx.quadraticCurveTo(x + 33, y - 45, x + 40, y - 15);
+  
+  // a
+  ctx.quadraticCurveTo(x + 50, y - 35, x + 58, y - 15);
+  ctx.quadraticCurveTo(x + 65, y, x + 60, y - 25);
+  ctx.quadraticCurveTo(x + 50, y - 45, x + 45, y - 25);
+  ctx.lineTo(x + 65, y - 15);
+
+  // e
+  ctx.quadraticCurveTo(x + 75, y - 40, x + 82, y - 25);
+  ctx.quadraticCurveTo(x + 90, y - 10, x + 85, y - 15);
+
+  // Tall 'l'
+  ctx.quadraticCurveTo(x + 95, y - 110, x + 110, y - 130);
+  ctx.quadraticCurveTo(x + 125, y - 140, x + 112, y - 30);
+  ctx.quadraticCurveTo(x + 100, y + 30, x + 125, y + 15);
+  
+  // Ending wave
+  ctx.quadraticCurveTo(x + 135, y + 25, x + 145, y + 15);
+  
+  ctx.stroke();
   ctx.restore();
 }
 

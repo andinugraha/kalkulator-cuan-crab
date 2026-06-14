@@ -32,14 +32,16 @@ function renderHead({ title, description, path, jsonLd }) {
 <html lang="id">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${escapeHtml(fullTitle)}</title>
     <meta name="description" content="${escapeHtml(description)}">
+    <meta name="keywords" content="kalkulator premium, kalkulator ilmiah online, kalkulator bayar, midtrans, cuancrab">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="${escapeHtml(canonical)}">
 
     <meta property="og:title" content="${escapeHtml(fullTitle)}">
     <meta property="og:description" content="${escapeHtml(description)}">
+    <meta property="og:image" content="${SITE_URL}/sertifikat_apresiasi_kalkulator.png">
     <meta property="og:type" content="website">
     <meta property="og:url" content="${escapeHtml(canonical)}">
     <meta property="og:locale" content="id_ID">
@@ -48,11 +50,14 @@ function renderHead({ title, description, path, jsonLd }) {
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="${escapeHtml(fullTitle)}">
     <meta name="twitter:description" content="${escapeHtml(description)}">
+    <meta name="twitter:image" content="${SITE_URL}/sertifikat_apresiasi_kalkulator.png">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" href="/favicon.ico?v=2" type="image/x-icon">
+    <link rel="shortcut icon" href="/favicon.ico?v=2" type="image/x-icon">
     ${jsonLdScript}
   </head>`;
 }
@@ -66,11 +71,6 @@ function renderHeader(activeId) {
   const brandActive = activeId === 'calculator' ? ' active' : '';
 
   return `<header class="site-header">
-      <button id="burger-btn" class="burger-btn" type="button" aria-label="Buka menu" aria-expanded="false">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
       <a class="brand-btn nav-link${brandActive}" href="/">Kalkulator Premium</a>
       <nav id="site-nav" class="site-nav" aria-label="Navigasi halaman">
         ${navLinks}
@@ -104,7 +104,7 @@ export function renderContentPage({ title, description, path, activeId, h1, body
     </main>
 
     ${renderFooter()}
-    <script src="/common.js"></script>
+    <script src="/common.js" defer></script>
   </body>
 </html>`;
 }
