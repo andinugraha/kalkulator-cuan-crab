@@ -5,7 +5,13 @@ const organizationJsonLd = {
   '@type': 'Organization',
   name: SITE_NAME,
   url: SITE_URL,
-  email: 'support@cuancrab.online',
+  email: 'andifap80@gmail.com',
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: 'Balikpapan',
+    addressRegion: 'Kalimantan Timur',
+    addressCountry: 'ID'
+  },
   description: 'Kalkulator online berbayar untuk hiburan dengan fitur ilmiah dan pembayaran digital.'
 };
 
@@ -42,11 +48,13 @@ const pages = {
     activeId: 'tentang',
     h1: 'Tentang Kami',
     bodyHtml: `
-        <p>Kalkulator Premium dibuat sebagai layanan digital ringan, praktis, dan bernuansa meme untuk menghitung angka dengan cara yang tidak terlalu serius, tetapi tetap transparan dalam pembayaran.</p>
-        <p>Kami menampilkan harga sebelum transaksi, memproses pembayaran melalui payment gateway, dan menyediakan kontak bantuan untuk kendala transaksi.</p>
-        <p>Nama usaha/brand: Kalkulator Premium</p>
-        <p>Website: cuancrab.online</p>
-        <p>Jenis usaha: Layanan digital berbasis website</p>`,
+        <p>Kalkulator Premium dibuat sebagai layanan digital ringan, praktis, dan interaktif untuk membantu perhitungan matematika dengan cara yang menyenangkan, serta tetap transparan dan aman dalam pembayaran.</p>
+        <p>Kami menampilkan harga sebelum transaksi, memproses pembayaran melalui payment gateway resmi, dan menyediakan kontak bantuan untuk kendala transaksi.</p>
+        <p>Nama Usaha/Brand: Kalkulator Premium</p>
+        <p>Pemilik / Penanggung Jawab: Andi Nugraha</p>
+        <p>Jenis Usaha: Usaha Perorangan (Layanan Digital Entertainment)</p>
+        <p>Website Resmi: cuancrab.online</p>
+        <p>Alamat Kantor Usaha: Balikpapan, Kalimantan Timur</p>`,
     jsonLd: organizationJsonLd
   },
   kontak: {
@@ -57,9 +65,10 @@ const pages = {
     h1: 'Kontak',
     bodyHtml: `
         <p>Untuk pertanyaan, kendala pembayaran, atau bantuan layanan, hubungi kami melalui:</p>
-        <p>Email layanan pelanggan: <a href="mailto:support@cuancrab.online">support@cuancrab.online</a></p>
-        <p>WhatsApp/Telepon: <a href="tel:+6281200000000">+62 812-0000-0000</a></p>
+        <p>Email layanan pelanggan: <a href="mailto:andifap80@gmail.com">andifap80@gmail.com</a></p>
+        <p>WhatsApp/Telepon: <a href="tel:+6281254995123">+62 812-5499-5123</a></p>
         <p>Website: <a href="https://cuancrab.online">https://cuancrab.online</a></p>
+        <p>Alamat Kantor Usaha: Balikpapan, Kalimantan Timur</p>
         <p>Jam operasional: Senin sampai Jumat, pukul 09.00 sampai 17.00 WIB, kecuali hari libur nasional.</p>
         <p>Sertakan nomor order, tanggal transaksi, nominal pembayaran, dan ringkasan kendala agar pengecekan lebih cepat.</p>`,
     jsonLd: {
@@ -67,8 +76,8 @@ const pages = {
       contactPoint: {
         '@type': 'ContactPoint',
         contactType: 'customer support',
-        email: 'support@cuancrab.online',
-        telephone: '+62-812-0000-0000',
+        email: 'andifap80@gmail.com',
+        telephone: '+62-812-5499-5123',
         availableLanguage: 'Indonesian',
         hoursAvailable: 'Mo-Fr 09:00-17:00'
       }
@@ -110,9 +119,9 @@ const pages = {
     bodyHtml: `
         <p>Terakhir diperbarui: 13 Juni 2026</p>
         <p><strong>Tidak ada refund untuk layanan yang sudah berhasil diproses.</strong> Kalkulator Premium adalah layanan digital hiburan. Setelah pembayaran berhasil dan hasil perhitungan tersedia, transaksi dianggap selesai dan tidak dapat dibatalkan.</p>
-        <p>Refund tidak diberikan untuk salah input rumus, salah angka, berubah pikiran, hasil yang tidak sesuai ekspektasi, atau karena pengguna baru sadar bahwa ini memang website meme.</p>
+        <p>Refund tidak diberikan untuk salah input rumus, salah angka, berubah pikiran, hasil yang tidak sesuai ekspektasi, atau karena kelalaian pengguna dalam memahami ketentuan simulasi.</p>
         <p>Pengecualian hanya berlaku apabila terjadi pembayaran ganda untuk order yang sama atau pembayaran berhasil tetapi hasil sama sekali tidak dapat diakses karena gangguan sistem kami.</p>
-        <p>Permintaan pengecekan dapat dikirim ke <a href="mailto:support@cuancrab.online">support@cuancrab.online</a> maksimal 3 hari kalender sejak transaksi, dengan menyertakan nomor order, bukti pembayaran, nominal, dan tanggal transaksi.</p>`
+        <p>Permintaan pengecekan dapat dikirim ke <a href="mailto:andifap80@gmail.com">andifap80@gmail.com</a> maksimal 3 hari kalender sejak transaksi, dengan menyertakan nomor order, bukti pembayaran, nominal, dan tanggal transaksi.</p>`
   },
   faq: {
     title: 'FAQ',
@@ -124,7 +133,7 @@ const pages = {
         <h2>Apa itu Kalkulator Premium?</h2>
         <p>Kalkulator online berbayar untuk hiburan. Masukkan rumus, bayar, lalu hasil muncul.</p>
         <h2>Apakah ini serius?</h2>
-        <p>Layanannya berjalan serius, konsepnya lucu-lucuan. Angka tetap angka, tapi vibes-nya meme.</p>
+        <p>Layanannya berjalan serius dengan sistem pembayaran terintegrasi, disajikan dalam kemasan interaktif yang menghibur dan edukatif.</p>
         <h2>Apakah ada produk fisik?</h2>
         <p>Tidak. Semua digital dan langsung tampil di website.</p>
         <h2>Apakah bisa refund?</h2>

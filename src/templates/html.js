@@ -71,7 +71,10 @@ function renderHeader(activeId) {
   const brandActive = activeId === 'calculator' ? ' active' : '';
 
   return `<header class="site-header">
-      <a class="brand-btn nav-link${brandActive}" href="/">Kalkulator Premium</a>
+      <a class="brand-btn nav-link${brandActive}" href="/" style="display: flex; align-items: center; gap: 8px;">
+        <img src="/favicon.ico?v=2" alt="Logo" width="20" height="20" style="border-radius: 4px;">
+        Kalkulator Premium
+      </a>
       <nav id="site-nav" class="site-nav" aria-label="Navigasi halaman">
         ${navLinks}
       </nav>
