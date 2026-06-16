@@ -185,9 +185,23 @@ app.post('/api/calculate', async (req, res) => {
   try {
     const { expression, mode = 'deg' } = req.body || {};
     const expr = String(expression || '').trim();
-    if (!expr || expr.length > 200) return res.status(400).json({ error: 'Input tidak valid.' });
+    
+    // 1. Batasan Input (Keamanan & Performa)
+    if (!expr || expr.length > 200) {
+      return res.status(400).json({ error: 'Input terlalu panjang atau kosong.' });
+    }
 
-    if (missingEnv.length > 0) return res.json({ result: evaluateExpression(expr, mode) });
+    // 2. Evaluasi Hasil
+    const result = evaluateExpression(expr, mode);
+    
+    // 3. Batasan Hasil (Cegah Infinity/NaN)
+    if (result === null || isNaN(result) || !isFinite(result)) {
+      return res.status(400).json({ error: 'Hasil perhitungan tidak valid atau terlalu besar.' });
+    }
+
+    if (missingEnv.length > 0) {
+      return res.json({ result });
+    }
 
     const price = calculatePrice(expr);
     const orderId = `CALC-${Date.now()}`;
@@ -203,7 +217,8 @@ app.post('/api/calculate', async (req, res) => {
 
     res.json({ orderId, token: transaction.token, redirect_url: transaction.redirect_url });
   } catch (error) {
-    res.status(400).json({ error: 'Proses gagal.' });
+    console.error('Calculation Error:', error);
+    res.status(400).json({ error: 'Terjadi kesalahan dalam perhitungan.' });
   }
 });
 

@@ -884,12 +884,29 @@ function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
 
 function fitCenteredText(ctx, text, x, y, maxWidth, startSize, minSize, family, weight) {
   let fontSize = startSize;
+  let textToDraw = String(text);
+
+  // Jika teks terlalu panjang dan kemungkinan angka, gunakan format ilmiah jika tetap tidak muat
+  if (textToDraw.length > 20 && !isNaN(Number(textToDraw))) {
+    const num = Number(textToDraw);
+    if (Math.abs(num) > 1e15 || (Math.abs(num) < 1e-7 && num !== 0)) {
+      textToDraw = num.toExponential(6);
+    }
+  }
+
   do {
     ctx.font = `${weight} ${fontSize}px ${family}`;
+    if (ctx.measureText(textToDraw).width <= maxWidth) break;
     fontSize -= 2;
-  } while (ctx.measureText(text).width > maxWidth && fontSize >= minSize);
+  } while (fontSize >= minSize);
 
-  ctx.fillText(text, x, y);
+  // Jika masih tidak muat setelah ukuran terkecil, paksa potong atau perkecil lagi
+  if (ctx.measureText(textToDraw).width > maxWidth) {
+    fontSize = Math.floor(fontSize * (maxWidth / ctx.measureText(textToDraw).width));
+    ctx.font = `${weight} ${fontSize}px ${family}`;
+  }
+
+  ctx.fillText(textToDraw, x, y);
 }
 
 // Pencegahan Zoom pada Mobile
